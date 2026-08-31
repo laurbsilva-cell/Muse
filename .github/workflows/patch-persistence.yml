@@ -1,0 +1,205 @@
+name: Patch Muse persistence
+
+on:
+  push:
+    paths:
+      - '.github/workflows/patch-persistence.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Patch persistence flow
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+
+          # 1) nuvem.js: restaurar dados remotos antes de decidir onboarding
+          p = Path('nuvem.js')
+          text = p.read_text(encoding='utf-8')
+          old = '''  /* ---------------------------------------------------------
+     INÍCIO
+     --------------------------------------------------------- */
+  N.iniciar = async function () {
+    pintarEstado();
+    if (!LIGADO) return;
+    try {
+      const c = await cliente();
+      const { data } = await c.auth.getSession();
+      sessao = data.session || null;
+      c.auth.onAuthStateChange(async (evt, s) => {
+        const trocou = sessao && s && sessao.user.id !== s.user.id;
+        sessao = s; N.usuario = s ? { id: s.user.id, email: s.user.email, nome: s.user.user_metadata?.full_name } : null;
+        if (trocou) { location.reload(); return; }
+        if (s) { N.estado = "ok"; pintarEstado(); await N.sincronizar(true); }
+        else { N.estado = "local"; pintarEstado(); }
+      });
+      if (sessao) {
+        N.usuario = { id: sessao.user.id, email: sessao.user.email, nome: sessao.user.user_metadata?.full_name };
+        await N.sincronizar(true);
+        setInterval(() => N.sincronizar(true), C.SYNC_INTERVALO || 60000);
+      }
+    } catch (e) { console.warn("nuvem:", e); N.estado = "erro"; pintarEstado(); }
+  };
+  if (document.readyState !== "loading") N.iniciar(); else addEventListener("DOMContentLoaded", N.iniciar);
+})();'''
+
+          new = '''  /* ---------------------------------------------------------
+     RESTAURAÇÃO DA CONTA
+     Em um PWA, o armazenamento local pode estar vazio em um novo contexto
+     (ex.: Safari x ícone instalado). A nuvem precisa ser consultada antes
+     de concluir que o usuário ainda não fez o onboarding.
+     --------------------------------------------------------- */
+  let entradaResolvidaPara = null;
+
+  async function resolverEntradaAutenticada(c) {
+    if (!sessao) return false;
+    const uidAtual = sessao.user.id;
+    if (entradaResolvidaPara === uidAtual) return !!S.perfil;
+
+    try {
+      if (!S.perfil) {
+        await baixarTudo(c);
+      }
+    } catch (e) {
+      console.warn("restauração da conta:", e);
+      N.estado = "erro";
+      N.erro = e.message;
+      pintarEstado();
+      return false;
+    }
+
+    entradaResolvidaPara = uidAtual;
+
+    const conta = document.getElementById("onbConta");
+    const onb = document.getElementById("onb");
+    const app = document.getElementById("app");
+
+    if (S.perfil) {
+      const appJaVisivel = app && !app.classList.contains("hide");
+      if (conta) conta.classList.add("hide");
+      if (onb) onb.classList.add("hide");
+      if (app) app.classList.remove("hide");
+      if (!appJaVisivel && typeof iniciarApp === "function") iniciarApp();
+      return true;
+    }
+
+    if (conta) conta.classList.add("hide");
+    if (typeof abrirOnb === "function") abrirOnb();
+    return false;
+  }
+
+  N.baixarDaNuvem = async function () {
+    if (!LIGADO || !sessao || !navigator.onLine) return false;
+    try {
+      const c = await cliente();
+      await baixarTudo(c);
+      return true;
+    } catch (e) {
+      console.warn("download da nuvem:", e);
+      N.estado = "erro";
+      N.erro = e.message;
+      pintarEstado();
+      return false;
+    }
+  };
+
+  /* ---------------------------------------------------------
+     INÍCIO
+     --------------------------------------------------------- */
+  N.iniciar = async function () {
+    pintarEstado();
+    if (!LIGADO) return;
+    try {
+      const c = await cliente();
+      const { data } = await c.auth.getSession();
+      sessao = data.session || null;
+
+      c.auth.onAuthStateChange(async (evt, s) => {
+        const trocou = sessao && s && sessao.user.id !== s.user.id;
+        sessao = s;
+        N.usuario = s ? { id: s.user.id, email: s.user.email, nome: s.user.user_metadata?.full_name } : null;
+        if (trocou) { location.reload(); return; }
+
+        if (s) {
+          N.estado = "ok";
+          pintarEstado();
+          const temPerfil = await resolverEntradaAutenticada(c);
+          if (temPerfil) await N.sincronizar(true);
+        } else {
+          entradaResolvidaPara = null;
+          N.estado = "local";
+          pintarEstado();
+        }
+      });
+
+      if (sessao) {
+        N.usuario = { id: sessao.user.id, email: sessao.user.email, nome: sessao.user.user_metadata?.full_name };
+        N.estado = "ok";
+        pintarEstado();
+        const temPerfil = await resolverEntradaAutenticada(c);
+        if (temPerfil) await N.sincronizar(true);
+        setInterval(() => N.sincronizar(true), C.SYNC_INTERVALO || 60000);
+      }
+    } catch (e) {
+      console.warn("nuvem:", e);
+      N.estado = "erro";
+      N.erro = e.message;
+      pintarEstado();
+    }
+  };
+  if (document.readyState !== "loading") N.iniciar(); else addEventListener("DOMContentLoaded", N.iniciar);
+})();'''
+
+          if old not in text:
+              raise SystemExit('Bloco de inicializacao de nuvem.js nao encontrado')
+          p.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          # 2) app.html: sincronizar imediatamente ao finalizar onboarding
+          p = Path('app.html')
+          text = p.read_text(encoding='utf-8')
+          old = '''function finalizarOnb() {
+  const p = perfilDoForm(); S.perfil = Object.assign(p, calcular(p), { manual: false });
+  salvar(); $("#onb").classList.add("hide"); $("#onbConta").classList.add("hide"); $("#app").classList.remove("hide"); iniciarApp();
+  setTimeout(escolherModulos, 400);
+}'''
+          new = '''function finalizarOnb() {
+  const p = perfilDoForm(); S.perfil = Object.assign(p, calcular(p), { manual: false });
+  salvar();
+  if (window.Nuvem && Nuvem.usuario) setTimeout(() => Nuvem.sincronizar(false), 100);
+  $("#onb").classList.add("hide"); $("#onbConta").classList.add("hide"); $("#app").classList.remove("hide"); iniciarApp();
+  setTimeout(escolherModulos, 400);
+}'''
+          if old not in text:
+              raise SystemExit('finalizarOnb nao encontrado')
+          p.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          # 3) config.js: remover workaround antigo, agora resolvido na camada de nuvem
+          p = Path('config.js')
+          text = p.read_text(encoding='utf-8')
+          marker = '\n/*\n  Correção do retorno do OAuth no PWA.'
+          if marker in text:
+              text = text.split(marker, 1)[0].rstrip() + '\n'
+          p.write_text(text, encoding='utf-8')
+
+          # 4) sw.js: renovar cache para entregar os JS novos no PWA instalado
+          p = Path('sw.js')
+          text = p.read_text(encoding='utf-8')
+          text = text.replace('const CACHE = "muse-v4";', 'const CACHE = "muse-v5";', 1)
+          p.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add nuvem.js app.html config.js sw.js
+          git diff --cached --quiet && exit 0
+          git commit -m "fix: persist and restore user data across PWA sessions"
+          git push
