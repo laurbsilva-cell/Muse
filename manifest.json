@@ -1,0 +1,67 @@
+{
+  "name": "muse.",
+  "short_name": "muse.",
+  "description": "Rotina, alimentação, água, finanças e bem-estar em um único espaço. Tudo salvo no seu aparelho.",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "start_url": "./app.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F3F1EC",
+  "theme_color": "#F3F1EC",
+  "categories": [
+    "lifestyle",
+    "productivity",
+    "health"
+  ],
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Registrar água",
+      "short_name": "Água",
+      "url": "./app.html#agua",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Hoje",
+      "short_name": "Hoje",
+      "url": "./app.html",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
+  "prefer_related_applications": false
+}

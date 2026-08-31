@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>muse. — sua vida, menos espalhada.</title>
+<meta name="description" content="Organize rotina, alimentação, finanças e bem-estar em um único espaço. Feito para dias reais, sem transformar sua vida em uma planilha.">
+<meta name="theme-color" content="#F3F1EC">
+<meta name="color-scheme" content="light">
+<link rel="canonical" href="./index.html">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="muse.">
+<meta property="og:title" content="muse. — sua vida, menos espalhada.">
+<meta property="og:description" content="Rotina, alimentação, dinheiro e bem-estar em um único lugar. Sem transformar sua vida em uma planilha.">
+<meta property="og:image" content="og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="pt_BR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="muse. — sua vida, menos espalhada.">
+<meta name="twitter:description" content="Rotina, alimentação, dinheiro e bem-estar em um único lugar.">
+<meta name="twitter:image" content="og.png">
+
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"muse.",
+"applicationCategory":"LifestyleApplication","operatingSystem":"iOS, Android, Web",
+"description":"Aplicativo pessoal que reúne rotina, alimentação, finanças e bem-estar em um único espaço.",
+"inLanguage":"pt-BR","offers":{"@type":"Offer","price":"0","priceCurrency":"BRL"}}
+</script>
+
+<style>
+/* ============================================================
+   TOKENS — mesmos valores do aplicativo
+   ============================================================ */
+:root{
+  --roxo:#783A8A; --roxo-fundo:#F1E9F4; --roxo-escuro:#5E2C6D;
+  --creme:#F3F1EC; --creme2:#EDEAE3; --branco:#FFFFFF;
+  --lilas:#B98FCB; --ocre:#C08A2E; --azul:#6C93BE; --verde:#6B9E7F; --terra:#B4483C;
+  --txt:#2B2430; --mut:#8A8292; --linha:#E5E1D7; --linha2:#EFEBE2;
+  --disp:ui-rounded,"SF Pro Rounded","Hiragino Maru Gothic ProN","Varela Round","Nunito","Trebuchet MS",system-ui,sans-serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","Inter","Manrope",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --max:1200px;
+  --sombra:0 1px 2px rgba(43,36,48,.04),0 8px 24px rgba(43,36,48,.05);
+  --sombra-alta:0 2px 6px rgba(43,36,48,.05),0 24px 60px rgba(43,36,48,.10);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{background:var(--creme);color:var(--txt);font-family:var(--sans);font-size:17px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden}
+img{max-width:100%;display:block}
+button,input{font:inherit;color:inherit}
+button{background:none;border:none;cursor:pointer}
+a{color:var(--roxo);text-decoration:none}
+:focus-visible{outline:2.5px solid var(--roxo);outline-offset:3px;border-radius:4px}
+::selection{background:var(--roxo);color:var(--creme)}
+
+.wrap{max-width:var(--max);margin:0 auto;padding:0 22px}
+.sec{padding:96px 0}
+.sec-sm{padding:64px 0}
+
+/* ---------- tipografia ---------- */
+.eyebrow{font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);font-weight:600;
+  display:inline-flex;align-items:center;gap:9px}
+.eyebrow::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--roxo);flex:0 0 auto}
+h1,h2,h3{font-family:var(--disp);font-weight:700;letter-spacing:-.035em;line-height:1.02;text-transform:lowercase}
+h1{font-size:clamp(42px,8.4vw,74px)}
+h2{font-size:clamp(31px,5.4vw,50px);line-height:1.05}
+h3{font-size:clamp(20px,2.6vw,25px);letter-spacing:-.028em}
+.lead{font-size:clamp(17px,2vw,19.5px);color:#4A4353;line-height:1.6;max-width:48ch}
+.mut{color:var(--mut)}
+.ponto{color:var(--roxo)}
+.med{font-family:var(--disp);font-weight:700;letter-spacing:-.03em}
+
+/* ---------- botões ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;background:var(--roxo);color:#fff;
+  font-family:var(--disp);font-weight:700;font-size:17px;letter-spacing:-.015em;padding:15px 26px;border-radius:999px;
+  min-height:52px;transition:transform .18s cubic-bezier(.2,.9,.3,1),background .18s}
+.btn:hover{background:var(--roxo-escuro);transform:translateY(-1px)}
+.btn:active{transform:scale(.98)}
+.btn.ghost{background:transparent;color:var(--txt);border:1px solid var(--linha)}
+.btn.ghost:hover{background:var(--branco);border-color:var(--mut);color:var(--txt)}
+.btn.creme{background:var(--creme);color:var(--roxo)}
+.btn.creme:hover{background:#fff}
+.btn.sm{font-size:15px;padding:11px 19px;min-height:44px}
+
+/* ---------- navbar ---------- */
+header.nav{position:sticky;top:0;z-index:100;background:rgba(243,241,236,.86);
+  backdrop-filter:saturate(1.5) blur(14px);-webkit-backdrop-filter:saturate(1.5) blur(14px);
+  border-bottom:1px solid transparent;transition:border-color .25s}
+header.nav.scrolled{border-bottom-color:var(--linha)}
+.nav-in{display:flex;align-items:center;justify-content:space-between;gap:20px;height:68px}
+.nav-logo img{height:20px;width:auto}
+.nav-links{display:flex;gap:30px;align-items:center}
+.nav-links a{color:var(--txt);font-size:15px;font-weight:500;opacity:.72;transition:opacity .2s;position:relative}
+.nav-links a:hover{opacity:1}
+.nav-links a::after{content:"";position:absolute;left:50%;bottom:-9px;width:5px;height:5px;border-radius:50%;
+  background:var(--roxo);transform:translateX(-50%) scale(0);transition:transform .22s cubic-bezier(.2,.9,.3,1)}
+.nav-links a:hover::after{transform:translateX(-50%) scale(1)}
+@media (max-width:820px){.nav-links{display:none}}
+
+/* ---------- hero ---------- */
+.hero{padding:clamp(48px,7vw,86px) 0 clamp(60px,8vw,100px)}
+.hero-grid{display:grid;grid-template-columns:minmax(0,45fr) minmax(0,55fr);gap:clamp(32px,6vw,72px);align-items:center}
+@media (max-width:900px){.hero-grid{grid-template-columns:1fr;gap:44px}}
+.hero h1{margin:20px 0 22px}
+.hero h1 em{font-style:normal;color:var(--roxo)}
+.hero-ctas{display:flex;gap:12px;flex-wrap:wrap;margin:34px 0 16px}
+.micro{font-size:14.5px;color:var(--mut)}
+
+/* ---------- mockup de celular ---------- */
+.phone{width:302px;max-width:100%;background:var(--branco);border:1px solid var(--linha);border-radius:42px;
+  padding:9px;box-shadow:var(--sombra-alta);margin:0 auto;position:relative}
+.phone-screen{background:var(--creme);border-radius:34px;overflow:hidden;position:relative;
+  display:flex;flex-direction:column;min-height:566px}
+.ph-status{display:flex;justify-content:space-between;align-items:center;padding:13px 20px 4px;font-size:11.5px;color:var(--mut);font-weight:600}
+.ph-status .dots{display:flex;gap:3px}
+.ph-status .dots i{width:4px;height:4px;border-radius:50%;background:var(--mut);display:block;opacity:.5}
+.ph-body{flex:1;padding:6px 15px 12px;overflow:hidden}
+.ph-h{font-family:var(--disp);font-weight:700;font-size:25px;letter-spacing:-.035em;line-height:1.1}
+.ph-sub{font-size:12px;color:var(--mut);margin-top:2px}
+.ph-card{background:var(--branco);border:1px solid var(--linha2);border-radius:18px;padding:13px 14px;margin-top:10px}
+.ph-lab{font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--mut);font-weight:700}
+.ph-big{font-family:var(--disp);font-weight:700;font-size:27px;letter-spacing:-.04em;line-height:1}
+.ph-big small{font-size:12.5px;font-weight:600;color:var(--mut);letter-spacing:0}
+.ph-bar{height:5px;border-radius:99px;background:var(--linha2);overflow:hidden;margin-top:8px}
+.ph-bar i{display:block;height:100%;border-radius:99px;background:var(--roxo);transition:width .45s cubic-bezier(.2,.9,.3,1)}
+.ph-row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.ph-nav{display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--linha2);background:rgba(255,255,255,.95);
+  padding:9px 0 13px}
+.ph-nav span{font-size:9px;text-align:center;color:var(--mut);font-weight:600;letter-spacing:-.01em}
+.ph-nav span.on{color:var(--roxo)}
+.ph-nav span.mais{font-family:var(--disp);font-size:16px;line-height:.7;color:var(--roxo)}
+.ph-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--linha2);font-size:13px}
+.ph-item:last-child{border-bottom:none}
+.ph-hora{font-family:var(--disp);font-weight:700;font-size:13px;color:var(--roxo);min-width:40px}
+.ph-tick{width:20px;height:20px;border-radius:7px;border:1.4px solid var(--linha);flex:0 0 auto;display:grid;place-items:center;
+  transition:background .25s,border-color .25s}
+.ph-tick.on{background:var(--roxo);border-color:var(--roxo)}
+.ph-tick svg{width:11px;height:11px;stroke:#fff;stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round;
+  stroke-dasharray:20;stroke-dashoffset:20;transition:stroke-dashoffset .3s ease .05s}
+.ph-tick.on svg{stroke-dashoffset:0}
+.ph-pill{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:600;padding:3px 9px;border-radius:999px;
+  background:var(--roxo-fundo);color:var(--roxo)}
+
+/* ---------- grid utilitário ---------- */
+.dupla{display:grid;grid-template-columns:1fr 1fr;gap:clamp(30px,5.5vw,72px);align-items:center}
+.dupla.inverso>*:first-child{order:2}
+@media (max-width:880px){.dupla{grid-template-columns:1fr;gap:38px}.dupla.inverso>*:first-child{order:0}}
+.card{background:var(--branco);border:1px solid var(--linha);border-radius:20px;padding:24px;box-shadow:var(--sombra)}
+.card.plano{background:#FBFAF7;box-shadow:none}
+
+/* ---------- revelação no scroll ---------- */
+.rev{opacity:0;transform:translateY(18px);transition:opacity .7s cubic-bezier(.2,.9,.3,1),transform .7s cubic-bezier(.2,.9,.3,1)}
+.rev.vis{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .rev{opacity:1;transform:none;transition:none}
+  *{animation-duration:.001ms!important;transition-duration:.001ms!important}
+}
+</style>
+<style>
+/* ---------- quebra editorial ---------- */
+.quebra{padding:clamp(80px,12vw,150px) 0;text-align:center}
+.quebra .apagando{font-family:var(--disp);font-weight:700;font-size:clamp(24px,4.6vw,44px);letter-spacing:-.035em;
+  line-height:1.25;color:var(--txt)}
+.quebra .apagando span{transition:opacity .6s ease,filter .6s ease;display:inline-block}
+.quebra.on .apagando span{opacity:.16;filter:blur(1px)}
+.quebra .resta{font-family:var(--disp);font-weight:700;font-size:clamp(34px,7vw,68px);letter-spacing:-.045em;
+  color:var(--roxo);margin-top:22px;opacity:0;transform:translateY(10px);transition:opacity .7s ease .35s,transform .7s cubic-bezier(.2,.9,.3,1) .35s}
+.quebra.on .resta{opacity:1;transform:none}
+
+/* ---------- problema: abas ---------- */
+.abas{display:flex;flex-wrap:wrap;gap:9px;margin-top:8px}
+.aba{background:var(--branco);border:1px solid var(--linha);border-radius:12px 12px 4px 4px;padding:9px 15px;
+  font-size:14px;color:var(--mut);position:relative;transition:transform .5s cubic-bezier(.2,.9,.3,1),opacity .5s}
+.convergiu .aba{transform:translateY(8px) scale(.94);opacity:.42}
+.aba.muse{background:var(--roxo);border-color:var(--roxo);color:#fff;font-family:var(--disp);font-weight:700;opacity:1}
+.convergiu .aba.muse{transform:none;opacity:1}
+
+/* ---------- visão geral: 5 partes ---------- */
+.partes{border-top:1px solid var(--linha)}
+.parte{display:grid;grid-template-columns:88px 1fr auto;gap:20px;align-items:baseline;padding:26px 0;
+  border-bottom:1px solid var(--linha);transition:background .25s}
+.parte:hover{background:rgba(255,255,255,.5)}
+.parte .n{font-family:var(--disp);font-weight:700;font-size:20px;color:var(--mut);letter-spacing:-.02em}
+.parte .n b{color:var(--roxo)}
+.parte .t{font-family:var(--disp);font-weight:700;font-size:clamp(26px,4.4vw,40px);letter-spacing:-.035em;line-height:1}
+.parte .d{font-size:14.5px;color:var(--mut);max-width:34ch;text-align:right}
+@media (max-width:700px){.parte{grid-template-columns:56px 1fr;gap:14px;padding:20px 0}
+  .parte .d{grid-column:2;text-align:left;margin-top:6px}}
+
+/* ---------- listas discretas ---------- */
+.mini{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:22px;list-style:none}
+.mini li{font-size:14px;color:var(--mut);display:flex;align-items:center;gap:8px}
+.mini li::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--lilas)}
+
+/* ---------- selo TACO ---------- */
+.selo{display:inline-flex;align-items:center;gap:10px;background:var(--roxo-fundo);color:var(--roxo);
+  border-radius:999px;padding:8px 16px;font-size:13.5px;font-weight:600}
+.selo b{font-family:var(--disp);font-weight:700}
+.busca{background:var(--branco);border:1px solid var(--linha);border-radius:18px;overflow:hidden;box-shadow:var(--sombra)}
+.busca-top{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--linha2);color:var(--mut);font-size:15px}
+.busca-top svg{width:16px;height:16px;stroke:var(--mut);fill:none;stroke-width:2}
+.busca-item{padding:12px 16px;border-bottom:1px solid var(--linha2);font-size:14.5px;display:flex;justify-content:space-between;gap:10px}
+.busca-item:last-child{border-bottom:none}
+.busca-item small{color:var(--mut);font-size:12.5px}
+.busca-abas{display:flex;gap:7px;padding:12px 16px;border-top:1px solid var(--linha2);background:#FBFAF7}
+.busca-abas span{font-size:12.5px;padding:5px 12px;border-radius:999px;background:var(--branco);border:1px solid var(--linha);color:var(--mut)}
+.busca-abas span.on{background:var(--roxo);border-color:var(--roxo);color:#fff}
+
+/* ---------- água ---------- */
+.agua-wrap{background:#EFF3F7;border:1px solid #DCE5EE;border-radius:24px;padding:clamp(26px,4vw,40px)}
+.agua-num{font-family:var(--disp);font-weight:700;font-size:clamp(52px,10vw,86px);letter-spacing:-.05em;color:var(--azul);line-height:.95}
+.agua-btns{display:flex;gap:9px;flex-wrap:wrap;margin-top:20px}
+.agua-btn{background:var(--branco);border:1px solid #D3DEE9;color:#4A6E8F;border-radius:999px;padding:11px 18px;
+  font-weight:600;font-size:14.5px;min-height:44px;transition:transform .15s,background .2s}
+.agua-btn:hover{background:#E4EDF5}
+.agua-btn:active{transform:scale(.95)}
+.copo-l{width:88px;height:132px;border:2px solid #C3D3E1;border-radius:10px 10px 22px 22px;position:relative;overflow:hidden;background:#fff;flex:0 0 auto}
+.copo-l i{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(180deg,#9BC0DE,#6C93BE);
+  transition:height .55s cubic-bezier(.2,.9,.3,1)}
+
+/* ---------- finanças ---------- */
+.fin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media (max-width:640px){.fin-grid{grid-template-columns:1fr}}
+.fin-num{font-family:var(--disp);font-weight:700;font-size:clamp(28px,4.4vw,38px);letter-spacing:-.04em;line-height:1;margin-top:6px}
+.calc{background:var(--branco);border:1px solid var(--linha);border-radius:22px;padding:clamp(22px,3.4vw,30px);box-shadow:var(--sombra)}
+.calc-in{display:flex;align-items:center;gap:10px;border:1px solid var(--linha);border-radius:16px;padding:14px 18px;background:#FBFAF7;margin:16px 0}
+.calc-in span{font-family:var(--disp);font-weight:700;font-size:24px;color:var(--mut)}
+.calc-in input{flex:1;border:none;background:none;font-family:var(--disp);font-weight:700;font-size:30px;letter-spacing:-.04em;outline:none;min-width:0}
+.calc-res{border-left:3px solid var(--roxo);padding:4px 0 4px 16px;margin-top:6px}
+.calc-res.alerta{border-left-color:var(--terra)}
+.calc-tit{font-family:var(--disp);font-weight:700;font-size:21px;letter-spacing:-.03em}
+.calc-tit.ok{color:var(--verde)}
+.calc-tit.nao{color:var(--terra)}
+.faixa-antes-depois{display:flex;align-items:center;gap:12px;margin-top:12px;flex-wrap:wrap;font-size:14.5px}
+.faixa-antes-depois b{font-family:var(--disp);font-weight:700;font-size:19px}
+.seta{color:var(--mut)}
+
+/* ---------- bem-estar ---------- */
+.humor-chips{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px}
+.humor-chip{border:1px solid var(--linha);background:var(--branco);border-radius:999px;padding:11px 20px;font-size:15px;
+  min-height:46px;transition:all .2s}
+.humor-chip:hover{border-color:var(--lilas)}
+.humor-chip.on{background:var(--roxo);border-color:var(--roxo);color:#fff;font-weight:600}
+.escala-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:22px}
+.escala-3 .card{padding:18px}
+.pontinhos{display:flex;gap:5px;margin-top:9px}
+.pontinhos i{width:8px;height:8px;border-radius:50%;background:var(--linha)}
+.pontinhos i.on{background:var(--roxo)}
+
+/* ---------- seção roxa: recomeçar ---------- */
+.roxa{background:var(--roxo);color:var(--creme)}
+.roxa h2,.roxa h3{color:var(--creme)}
+.roxa .eyebrow{color:rgba(243,241,236,.62)}
+.roxa .eyebrow::before{background:var(--lilas)}
+.roxa .lead{color:rgba(243,241,236,.78)}
+.linha-tempo{display:flex;flex-direction:column;gap:0;margin-top:4px}
+.lt{display:flex;align-items:center;gap:16px;padding:13px 0;border-bottom:1px solid rgba(243,241,236,.16)}
+.lt:last-child{border-bottom:none}
+.lt .h{font-family:var(--disp);font-weight:700;font-size:17px;min-width:52px;letter-spacing:-.02em}
+.lt .e{font-size:14px;opacity:.6}
+.lt.agora{opacity:1}
+.lt.agora .h{color:#fff}
+.lt.passado{opacity:.42}
+.lt .marca{width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(243,241,236,.4);display:grid;place-items:center;flex:0 0 auto}
+.lt.feito .marca{background:var(--creme);border-color:var(--creme)}
+.lt.feito .marca::after{content:"";width:8px;height:4px;border-left:2px solid var(--roxo);border-bottom:2px solid var(--roxo);
+  transform:rotate(-45deg) translate(1px,-1px)}
+.lt.agora .marca{border-color:var(--creme);box-shadow:0 0 0 4px rgba(243,241,236,.14)}
+.lt.agora .marca::after{content:"";width:8px;height:8px;border-radius:50%;background:var(--creme)}
+.retomada{margin-top:8px;overflow:hidden;max-height:0;opacity:0;transition:max-height .55s cubic-bezier(.2,.9,.3,1),opacity .45s ease}
+.retomada.aberta{max-height:280px;opacity:1}
+
+/* ---------- modo dia caótico ---------- */
+.switch{display:inline-flex;align-items:center;gap:12px;background:var(--branco);border:1px solid var(--linha);
+  border-radius:999px;padding:9px 9px 9px 20px;box-shadow:var(--sombra);min-height:52px}
+.switch span{font-size:15px;font-weight:600}
+.switch .tr{width:50px;height:29px;border-radius:999px;background:var(--linha);position:relative;transition:background .3s}
+.switch .tr::after{content:"";position:absolute;top:3px;left:3px;width:23px;height:23px;border-radius:50%;background:#fff;
+  box-shadow:0 1px 3px rgba(0,0,0,.15);transition:transform .3s cubic-bezier(.2,.9,.3,1)}
+.switch.on .tr{background:var(--roxo)}
+.switch.on .tr::after{transform:translateX(21px)}
+.some{transition:opacity .4s ease,max-height .5s cubic-bezier(.2,.9,.3,1),margin .4s,transform .4s;overflow:hidden;max-height:200px}
+.calmo .some{opacity:0;max-height:0;margin-top:0!important;margin-bottom:0!important;transform:translateY(-6px)}
+
+/* ---------- filosofia ---------- */
+.filo{text-align:center;padding:clamp(90px,14vw,170px) 0}
+.filo .grande{font-family:var(--disp);font-weight:700;font-size:clamp(36px,7.6vw,76px);letter-spacing:-.045em;line-height:1.02}
+.filo .grande i{font-style:normal;color:var(--lilas)}
+.filo .lista{margin:38px auto 0;max-width:30ch;display:flex;flex-direction:column;gap:9px;font-size:clamp(16px,2.2vw,19px);color:var(--mut)}
+.filo .fecho{font-family:var(--disp);font-weight:700;font-size:clamp(30px,5.6vw,52px);letter-spacing:-.04em;color:var(--roxo);margin-top:48px}
+
+/* ---------- insights ---------- */
+.ins-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media (max-width:900px){.ins-grid{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:520px){.ins-grid{grid-template-columns:1fr}}
+.ins{background:var(--branco);border:1px solid var(--linha);border-radius:20px;padding:22px;box-shadow:var(--sombra)}
+.ins .v{font-family:var(--disp);font-weight:700;font-size:clamp(30px,4vw,38px);letter-spacing:-.045em;line-height:1}
+.ins p{font-size:14.5px;color:var(--mut);margin-top:9px;line-height:1.5}
+
+/* ---------- progresso ---------- */
+.prog{display:grid;grid-template-columns:120px 1fr;gap:14px 18px;align-items:center}
+@media (max-width:560px){.prog{grid-template-columns:92px 1fr;gap:12px}}
+.prog-lab{font-size:14.5px;color:var(--mut)}
+.prog-dias{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.prog-dias i{height:30px;border-radius:8px;background:var(--linha2);display:block;transition:transform .3s}
+.prog-cab{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;font-size:11px;color:var(--mut);text-align:center;letter-spacing:.06em}
+
+/* ---------- showcase ---------- */
+.showcase{display:flex;gap:24px;overflow-x:auto;scroll-snap-type:x mandatory;padding:10px 22px 26px;
+  -webkit-overflow-scrolling:touch;scrollbar-width:none}
+.showcase::-webkit-scrollbar{display:none}
+.showcase>figure{scroll-snap-align:center;flex:0 0 auto;text-align:center}
+.showcase figcaption{font-family:var(--disp);font-weight:700;font-size:16px;color:var(--mut);margin-top:14px;letter-spacing:-.02em}
+@media (min-width:1100px){
+  .showcase{justify-content:center;overflow:visible;padding:10px 0 26px;gap:18px}
+  .showcase>figure:nth-child(odd){transform:translateY(-18px)}
+}
+
+/* ---------- privacidade / instalação ---------- */
+.priv-lista{display:grid;grid-template-columns:repeat(2,1fr);gap:2px 26px;margin-top:24px}
+@media (max-width:600px){.priv-lista{grid-template-columns:1fr}}
+.priv-lista div{padding:16px 0;border-top:1px solid var(--linha);font-size:15.5px;display:flex;align-items:center;gap:11px}
+.priv-lista div::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--roxo);flex:0 0 auto}
+.passos{counter-reset:p;display:grid;gap:2px;margin-top:8px}
+.passo{display:flex;gap:16px;align-items:baseline;padding:17px 0;border-top:1px solid var(--linha)}
+.passo:last-child{border-bottom:1px solid var(--linha)}
+.passo b{font-family:var(--disp);font-weight:700;color:var(--roxo);font-size:15px;min-width:26px}
+.abas-so{display:flex;gap:8px;margin-bottom:22px;flex-wrap:wrap}
+.abas-so button{border:1px solid var(--linha);background:var(--branco);border-radius:999px;padding:9px 18px;font-size:14.5px;min-height:44px}
+.abas-so button.on{background:var(--roxo);border-color:var(--roxo);color:#fff;font-weight:600}
+
+/* ---------- CTA final e rodapé ---------- */
+.final{text-align:center;padding:clamp(100px,15vw,180px) 0}
+.final img.logo{height:34px;width:auto;margin:0 auto 40px}
+.final h2{font-size:clamp(32px,6.4vw,62px);max-width:16ch;margin:0 auto}
+.final .sub{font-family:var(--disp);font-weight:700;font-size:clamp(24px,4.4vw,40px);color:var(--roxo);letter-spacing:-.04em;margin-top:14px}
+footer{border-top:1px solid var(--linha);padding:44px 0 60px}
+.foot-in{display:flex;justify-content:space-between;gap:26px;flex-wrap:wrap;align-items:flex-start}
+.foot-links{display:flex;gap:26px;flex-wrap:wrap}
+.foot-links a{color:var(--txt);opacity:.68;font-size:15px}
+.foot-links a:hover{opacity:1}
+.foot-fim{font-family:var(--disp);font-weight:700;font-size:16px;color:var(--mut);letter-spacing:-.02em;margin-top:26px}
+</style>
+</head>
+<body>
+
+<a href="#conteudo" class="btn sm" style="position:absolute;left:-9999px;top:8px" onfocus="this.style.left='8px'" onblur="this.style.left='-9999px'">pular para o conteúdo</a>
+
+<!-- ============================ Navbar ============================ -->
+<header class="nav" id="navbar">
+  <div class="wrap nav-in">
+    <a href="#topo" class="nav-logo" aria-label="muse. — início"><img src="logo.png" alt="muse."></a>
+    <nav class="nav-links" aria-label="Principal">
+      <a href="#beneficios">benefícios</a>
+      <a href="#como-funciona">como funciona</a>
+      <a href="#privacidade">privacidade</a>
+    </nav>
+    <a href="app.html" class="btn sm">abrir muse.</a>
+  </div>
+</header>
+
+<main id="conteudo">
+
+<!-- ============================ Hero ============================ -->
+<section class="hero" id="topo">
+  <div class="wrap hero-grid">
+    <div>
+      <p class="eyebrow">seu espaço pessoal</p>
+      <h1>sua vida,<br>menos <em>espalhada.</em></h1>
+      <p class="lead">rotina, alimentação, dinheiro e bem-estar em um único lugar. sem transformar sua vida em uma planilha.</p>
+      <div class="hero-ctas">
+        <a href="app.html" class="btn">começar meu dia</a>
+        <a href="#beneficios" class="btn ghost">conhecer o muse.</a>
+      </div>
+      <p class="micro">simples para começar. feito para continuar.</p>
+    </div>
+
+    <div class="rev vis">
+      <!-- mockup: tela hoje -->
+      <div class="phone" id="phoneHero" role="img" aria-label="Tela inicial do muse. mostrando o resumo do dia: compromisso atual, calorias, água, tarefas, medicamentos e gastos.">
+        <div class="phone-screen">
+          <div class="ph-status"><span>9:41</span><span class="dots"><i></i><i></i><i></i></span></div>
+          <div class="ph-body">
+            <div style="padding:8px 2px 4px">
+              <div class="ph-h">boa manhã, Laura.</div>
+              <div class="ph-sub">quarta, 19 de agosto</div>
+            </div>
+
+            <div class="ph-card" style="border-color:#E3D6E9;background:#FCFAFD">
+              <div class="ph-row"><span class="ph-lab">agora</span><span class="ph-pill">até 12:00</span></div>
+              <div class="ph-row" style="margin-top:5px;align-items:baseline">
+                <span class="ph-big">09:00</span><span style="font-size:13px;font-weight:600">trabalho</span>
+              </div>
+            </div>
+
+            <div class="ph-card">
+              <div class="ph-row"><span class="ph-lab">alimentação</span><span style="font-size:11px;color:var(--mut)">1.260 / 1.700 kcal</span></div>
+              <div class="ph-big" style="margin-top:6px">1.260<small> kcal</small></div>
+              <div class="ph-bar"><i style="width:74%"></i></div>
+              <div class="ph-row" style="margin-top:9px;font-size:11.5px;color:var(--mut)"><span>proteína</span><span><b style="color:var(--txt)">94</b> / 125 g</span></div>
+              <div class="ph-bar"><i style="width:75%;background:var(--lilas)"></i></div>
+            </div>
+
+            <div class="ph-card">
+              <div class="ph-row">
+                <div>
+                  <span class="ph-lab">água</span>
+                  <div class="ph-big" style="margin-top:5px;color:var(--azul)"><span id="heroAgua">1,1</span> L<small> / 2,5 L</small></div>
+                </div>
+                <div style="width:34px;height:50px;border:1.5px solid #C8D8E5;border-radius:6px 6px 12px 12px;position:relative;overflow:hidden;background:#fff">
+                  <i id="heroCopo" style="position:absolute;left:0;right:0;bottom:0;height:44%;background:linear-gradient(180deg,#9BC0DE,#6C93BE);transition:height .5s cubic-bezier(.2,.9,.3,1)"></i>
+                </div>
+              </div>
+            </div>
+
+            <div class="ph-card">
+              <div class="ph-row"><span class="ph-lab">hoje</span><span style="font-size:11px;color:var(--mut)" id="heroRest">3 tarefas restantes</span></div>
+              <div style="margin-top:6px">
+                <div class="ph-item" style="padding:7px 0"><span class="ph-tick on" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 12.5l5.5 5.5L20 6.5"/></svg></span><span style="text-decoration:line-through;color:var(--mut)">responder e-mails</span></div>
+                <div class="ph-item" style="padding:7px 0"><span class="ph-tick" id="heroTick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 12.5l5.5 5.5L20 6.5"/></svg></span><span id="heroTarefa">fechar a proposta</span></div>
+                <div class="ph-item" style="padding:7px 0"><span class="ph-tick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 12.5l5.5 5.5L20 6.5"/></svg></span><span>comprar café</span></div>
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
+              <div class="ph-card" style="margin-top:10px">
+                <span class="ph-lab">medicamentos</span>
+                <div style="font-size:12px;margin-top:7px;display:flex;flex-direction:column;gap:4px">
+                  <span style="color:var(--roxo);font-weight:600">manhã ✓</span>
+                  <span style="color:var(--mut)">noite ○</span>
+                </div>
+              </div>
+              <div class="ph-card" style="margin-top:10px">
+                <span class="ph-lab">gastos hoje</span>
+                <div class="ph-big" style="margin-top:6px;font-size:21px">R$ 32,40</div>
+              </div>
+            </div>
+          </div>
+          <div class="ph-nav"><span class="on">hoje</span><span>rotina</span><span class="mais">+</span><span>finanças</span><span>bem-estar</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ Quebra editorial ============================ -->
+<section class="quebra" id="quebra1">
+  <div class="wrap">
+    <p class="apagando">
+      <span>calendário.</span> <span>banco.</span> <span>dieta.</span> <span>notas.</span> <span>lembretes.</span>
+    </p>
+    <p class="resta">ou só muse.</p>
+  </div>
+</section>
+
+<!-- ============================ Problema ============================ -->
+<section class="sec" id="beneficios">
+  <div class="wrap dupla">
+    <div class="rev">
+      <p class="eyebrow">o problema</p>
+      <h2 style="margin:18px 0 20px">sua vida já tem<br>abas demais.</h2>
+      <p class="lead">um app para compromissos. outro para alimentação. outro para dinheiro. notas para lembrar do resto.</p>
+      <p class="lead" style="margin-top:18px;color:var(--txt)">o muse. coloca as partes importantes do seu dia no mesmo lugar.</p>
+    </div>
+    <div class="rev" id="abasBox">
+      <div class="abas">
+        <span class="aba">agenda</span><span class="aba">contador de calorias</span><span class="aba">banco</span>
+        <span class="aba">lista de tarefas</span><span class="aba">planilha</span><span class="aba">lembretes</span>
+        <span class="aba">bloco de notas</span><span class="aba">app de água</span><span class="aba">diário</span>
+      </div>
+      <div class="abas" style="margin-top:16px"><span class="aba muse">muse.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ Visão geral ============================ -->
+<section class="sec" id="como-funciona" style="padding-top:20px">
+  <div class="wrap">
+    <p class="eyebrow rev">visão geral</p>
+    <h2 class="rev" style="margin:18px 0 40px">um lugar.<br>cinco partes da sua vida.</h2>
+    <div class="partes rev">
+      <div class="parte"><span class="n">01<b>.</b></span><span class="t">rotina.</span><span class="d">compromissos, tarefas e hábitos no mesmo dia</span></div>
+      <div class="parte"><span class="n">02<b>.</b></span><span class="t">alimentação.</span><span class="d">refeições, calorias e água sem calculadora</span></div>
+      <div class="parte"><span class="n">03<b>.</b></span><span class="t">finanças.</span><span class="d">para onde o dinheiro está indo, enquanto o mês corre</span></div>
+      <div class="parte"><span class="n">04<b>.</b></span><span class="t">bem-estar.</span><span class="d">humor, sono, energia e medicamentos</span></div>
+      <div class="parte"><span class="n">05<b>.</b></span><span class="t">progresso.</span><span class="d">o que os seus registros mostram juntos</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ Rotina ============================ -->
+<section class="sec">
+  <div class="wrap dupla">
+    <div class="rev">
+      <p class="eyebrow">rotina</p>
+      <h2 style="margin:18px 0 20px">saiba o que precisa<br>acontecer hoje.</h2>
+      <p class="lead">compromissos, tarefas e hábitos aparecem juntos para você não precisar montar o quebra-cabeça toda manhã.</p>
+      <ul class="mini">
+        <li>agenda diária</li><li>rotina semanal</li><li>hábitos</li><li>prioridades</li><li>lembretes</li>
+      </ul>
+    </div>
+    <div class="rev">
+      <div class="card" style="max-width:400px;margin:0 auto">
+        <div class="ph-row"><span class="ph-lab">quarta-feira</span><span class="ph-pill">4 blocos</span></div>
+        <div style="margin-top:14px">
+          <div class="ph-item" style="font-size:15px;padding:12px 0"><span class="ph-hora" style="font-size:15px">08:00</span><span style="flex:1">trabalho</span><span class="ph-tick on"><svg viewBox="0 0 24 24"><path d="M4 12.5l5.5 5.5L20 6.5"/></svg></span></div>
+          <div class="ph-item" style="font-size:15px;padding:12px 0"><span class="ph-hora" style="font-size:15px">12:00</span><span style="flex:1">almoço</span><span class="ph-tick on"><svg viewBox="0 0 24 24"><path d="M4 12.5l5.5 5.5L20 6.5"/></svg></span></div>
+          <div class="ph-item" style="font-size:15px;padding:12px 0"><span class="ph-hora" style="font-size:15px">17:30</span><span style="flex:1">academia</span><span class="ph-tick"><svg viewBox="0 0 24 24"><path d="M4 12.5l5.5 5.5L20 6.5"/></svg></span></div>
+          <div class="ph-item" style="font-size:15px;padding:12px 0"><span class="ph-hora" style="font-size:15px">19:00</span><span style="flex:1">faculdade</span><span class="ph-tick"><svg viewBox="0 0 24 24"><path d="M4 12.5l5.5 5.5L20 6.5"/></svg></span></div>
+        </div>
+      </div>
+      <div class="card plano" style="max-width:400px;margin:14px auto 0;display:flex;align-items:center;justify-content:space-between;gap:14px">
+        <div><span class="ph-lab">próximo</span><div class="med" style="font-size:24px;margin-top:5px">17:30 · academia</div></div>
+        <span style="width:9px;height:9px;border-radius:50%;background:var(--roxo);flex:0 0 auto"></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ Alimentação ============================ -->
+<section class="sec" style="background:#FBFAF7;border-block:1px solid var(--linha)">
+  <div class="wrap dupla inverso">
+    <div class="rev">
+      <div class="card" style="max-width:400px;margin:0 auto">
+        <div class="ph-row"><span class="ph-lab">almoço</span><span style="font-size:13px;color:var(--mut)">12:40</span></div>
+        <div style="margin-top:12px">
+          <div class="ph-item" style="font-size:15px;padding:11px 0"><span style="flex:1">arroz, tipo 1, cozido</span><span class="mut" style="font-size:14px">100 g</span></div>
+          <div class="ph-item" style="font-size:15px;padding:11px 0"><span style="flex:1">feijão carioca, cozido</span><span class="mut" style="font-size:14px">100 g</span></div>
+          <div class="ph-item" style="font-size:15px;padding:11px 0"><span style="flex:1">frango, peito, grelhado</span><span class="mut" style="font-size:14px">130 g</span></div>
+        </div>
+        <div style="border-top:1px solid var(--linha);margin-top:12px;padding-top:16px">
+          <div class="ph-row" style="align-items:baseline"><span class="ph-lab">total</span><span class="med" style="font-size:32px">486 <span style="font-size:15px;color:var(--mut)">kcal</span></span></div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px">
+            <div><span class="ph-lab">proteína</span><div class="med" style="font-size:20px;margin-top:4px">42 g</div><div class="ph-bar"><i style="width:72%"></i></div></div>
+            <div><span class="ph-lab">carbo</span><div class="med" style="font-size:20px;margin-top:4px">53 g</div><div class="ph-bar"><i style="width:48%;background:var(--ocre)"></i></div></div>
+            <div><span class="ph-lab">gordura</span><div class="med" style="font-size:20px;margin-top:4px">11 g</div><div class="ph-bar"><i style="width:26%;background:var(--lilas)"></i></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="rev">
+      <p class="eyebrow">alimentação</p>
+      <h2 style="margin:18px 0 20px">alimentação sem<br>virar matemática.</h2>
+      <p class="lead">registre o que comeu e deixe as contas com o muse.</p>
+      <div style="margin-top:28px" class="selo"><b>TACO</b> dados nutricionais baseados na TACO</div>
+      <p class="lead" style="margin-top:16px;font-size:16px">os alimentos usam como referência a Tabela Brasileira de Composição de Alimentos, do NEPA/Unicamp. são 591 itens com energia, proteína, carboidrato, lipídeo e fibra por 100 g.</p>
+    </div>
+  </div>
+
+  <div class="wrap dupla" style="margin-top:clamp(48px,7vw,86px)">
+    <div class="rev">
+      <div class="busca" style="max-width:420px">
+        <div class="busca-top">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          <span style="color:var(--txt)">arroz</span>
+        </div>
+        <div class="busca-item"><span>arroz, tipo 1, cozido<br><small>128 kcal · 2,5 P · 28,1 C · 0,2 G</small></span></div>
+        <div class="busca-item"><span>arroz, integral, cozido<br><small>124 kcal · 2,6 P · 25,8 C · 1,0 G</small></span></div>
+        <div class="busca-item"><span>arroz, carreteiro<br><small>141 kcal · 12,0 P · 12,6 C · 4,5 G</small></span></div>
+        <div class="busca-abas"><span class="on">favoritos</span><span>recentes</span><span>receitas</span></div>
+      </div>
+    </div>
+    <div class="rev">
+      <h3 style="margin-bottom:14px">quanto mais você usa,<br>menos precisa digitar.</h3>
+      <p class="lead">favoritos, refeições recentes e receitas salvas ficam a um toque. o café de sempre entra inteiro, não item por item.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ Hidratação ============================ -->
+<section class="sec-sm">
+  <div class="wrap">
+    <div class="agua-wrap rev">
+      <div style="display:flex;gap:clamp(24px,5vw,60px);align-items:center;flex-wrap:wrap">
+        <div class="copo-l"><i id="copoGrande" style="height:68%"></i></div>
+        <div style="flex:1;min-width:240px">
+          <p class="eyebrow" style="color:#5B7E9E">hidratação</p>
+          <div class="agua-num" style="margin-top:14px"><span id="aguaVal">1,7</span> L</div>
+          <p style="color:#5B7E9E;font-size:15px;margin-top:6px">meta <b>2,5 L</b></p>
+          <div class="agua-btns">
+            <button class="agua-btn" data-ml="200">+200 ml</button>
+            <button class="agua-btn" data-ml="300">+300 ml</button>
+            <button class="agua-btn" data-ml="500">+500 ml</button>
+          </div>
+          <p style="margin-top:18px;font-family:var(--disp);font-weight:700;font-size:20px;letter-spacing:-.03em;color:#3F6183">dois toques e segue o dia.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ Finanças ============================ -->
+<section class="sec">
+  <div class="wrap">
+    <div style="max-width:640px">
+      <p class="eyebrow rev">finanças</p>
+      <h2 class="rev" style="margin:18px 0 20px">descubra para onde seu dinheiro está indo antes do mês acabar.</h2>
+    </div>
+    <div class="fin-grid rev" style="margin-top:40px">
+      <div class="card"><span class="ph-lab">receita</span><div class="fin-num">R$ 3.200</div></div>
+      <div class="card"><span class="ph-lab">gastos</span><div class="fin-num">R$ 1.840</div></div>
+      <div class="card" style="border-color:#CFE0D6;background:#F6FAF7"><span class="ph-lab" style="color:#4E7D62">economia prevista</span><div class="fin-num" style="color:var(--verde)" id="econPrev">R$ 620</div></div>
+    </div>
+    <div class="card rev" style="margin-top:14px;display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+      <div style="flex:1;min-width:200px">
+        <div class="ph-row"><span class="ph-lab">meta · viagem</span><span class="med" style="font-size:18px;color:var(--ocre)">38%</span></div>
+        <div class="ph-bar" style="height:7px;margin-top:10px"><i style="width:38%;background:var(--ocre)"></i></div>
+      </div>
+      <span class="mut" style="font-size:14.5px">R$ 1.520 de R$ 4.000</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ Posso comprar? ============================ -->
+<section class="sec" style="padding-top:0">
+  <div class="wrap dupla">
+    <div class="rev">
+      <p class="eyebrow">antes de decidir</p>
+      <h2 style="margin:18px 0 20px">posso comprar?</h2>
+      <p class="lead">digite o valor e veja o efeito no mês antes de gastar. sem sermão, sem bloqueio, sem cara feia.</p>
+      <p class="lead" style="margin-top:22px;color:var(--txt);font-family:var(--disp);font-weight:700;font-size:21px;letter-spacing:-.03em">você decide. o muse. mostra o impacto.</p>
+    </div>
+    <div class="rev">
+      <div class="calc">
+        <label class="ph-lab" for="valorCompra">quanto custa</label>
+        <div class="calc-in">
+          <span>R$</span>
+          <input id="valorCompra" type="text" inputmode="decimal" value="350" aria-describedby="resCompra">
+        </div>
+        <div id="resCompra" class="calc-res" aria-live="polite">
+          <div class="calc-tit ok">cabe no seu orçamento.</div>
+          <div class="faixa-antes-depois">
+            <span class="mut">economia prevista</span>
+            <b>R$ 620</b><span class="seta">→</span><b style="color:var(--verde)" id="depoisVal">R$ 270</b>
+          </div>
+        </div>
+        <p class="mut" style="font-size:13.5px;margin-top:18px">simulação com os números de exemplo desta página. no app, a conta usa os seus lançamentos.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ Bem-estar ============================ -->
+<section class="sec" style="background:#FBFAF7;border-block:1px solid var(--linha)">
+  <div class="wrap dupla inverso">
+    <div class="rev">
+      <div class="card" style="max-width:420px;margin:0 auto">
+        <span class="ph-lab">check-in</span>
+        <h3 style="margin-top:10px;font-size:22px">como você está agora?</h3>
+        <div class="humor-chips" role="group" aria-label="Como você está agora">
+          <button class="humor-chip on" data-humor>tranquila</button>
+          <button class="humor-chip" data-humor>ansiosa</button>
+          <button class="humor-chip" data-humor>cansada</button>
+          <button class="humor-chip" data-humor>animada</button>
+        </div>
+        <div class="escala-3">
+          <div class="card plano"><span class="ph-lab">sono</span><div class="pontinhos"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></div></div>
+          <div class="card plano"><span class="ph-lab">humor</span><div class="pontinhos"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div></div>
+          <div class="card plano"><span class="ph-lab">energia</span><div class="pontinhos"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></div></div>
+        </div>
+        <div style="border-top:1px solid var(--linha);margin-top:20px;padding-top:18px">
+          <span class="ph-lab">medicamentos</span>
+          <div style="display:flex;gap:22px;margin-top:11px;font-size:15px">
+            <span><b class="med">08:00</b> <span style="color:var(--roxo)">✓ registrado</span></span>
+            <span><b class="med">21:00</b> <span class="mut">○ pendente</span></span>
+          </div>
+          <p class="mut" style="font-size:13.5px;margin-top:12px">lembretes simples. sem julgamentos.</p>
+        </div>
+      </div>
+    </div>
+    <div class="rev">
+      <p class="eyebrow">bem-estar</p>
+      <h2 style="margin:18px 0 20px">organização também é perceber como você está.</h2>
+      <p class="lead">um toque para marcar o humor, o sono e a energia. escala opcional, campo livre opcional, nada obrigatório.</p>
+      <p class="lead" style="margin-top:22px;color:var(--txt);font-family:var(--disp);font-weight:700;font-size:21px;letter-spacing:-.03em">registrar não significa explicar tudo.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ Recomeçar daqui ============================ -->
+<section class="sec roxa" id="recomecar">
+  <div class="wrap dupla">
+    <div class="rev">
+      <p class="eyebrow">o diferencial</p>
+      <h2 style="margin:18px 0 8px;opacity:.72">perdeu metade do dia?</h2>
+      <h2 style="font-size:clamp(40px,7.6vw,74px);margin-bottom:24px">continua daqui.</h2>
+      <p class="lead">você não precisa preencher o passado para cuidar do restante do dia.</p>
+      <button class="btn creme" id="btnRetomar" style="margin-top:30px" aria-expanded="false" aria-controls="retomada">recomeçar daqui</button>
+    </div>
+    <div class="rev">
+      <div style="background:rgba(243,241,236,.07);border:1px solid rgba(243,241,236,.18);border-radius:22px;padding:22px 24px;max-width:420px;margin:0 auto">
+        <div class="linha-tempo">
+          <div class="lt feito passado"><span class="marca"></span><span class="h">08:00</span><span class="e">acordar</span></div>
+          <div class="lt feito passado"><span class="marca"></span><span class="h">10:00</span><span class="e">trabalho</span></div>
+          <div class="lt passado"><span class="marca"></span><span class="h">12:00</span><span class="e">almoço</span></div>
+          <div class="lt passado"><span class="marca"></span><span class="h">14:00</span><span class="e">faculdade</span></div>
+          <div class="lt agora"><span class="marca"></span><span class="h">16:00</span><span class="e" style="opacity:.9">agora</span></div>
+        </div>
+        <div class="retomada" id="retomada">
+          <div style="border-top:1px solid rgba(243,241,236,.18);margin-top:14px;padding-top:14px">
+            <div class="lt"><span class="marca"></span><span class="h">16:30</span><span class="e" style="opacity:.85">água</span></div>
+            <div class="lt"><span class="marca"></span><span class="h">17:00</span><span class="e" style="opacity:.85">lanche</span></div>
+            <div class="lt"><span class="marca"></span><span class="h">18:20</span><span class="e" style="opacity:.85">sair</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ Modo dia caótico ============================ -->
+<section class="sec">
+  <div class="wrap dupla">
+    <div class="rev">
+      <p class="eyebrow">quando o dia aperta</p>
+      <h2 style="margin:18px 0 20px">hoje está corrido?</h2>
+      <p class="lead">um toque e a tela guarda o resto. fica o que precisa acontecer nas próximas horas — o restante continua salvo, só sai da frente.</p>
+      <div style="margin-top:28px">
+        <button class="switch" id="switchCaos" role="switch" aria-checked="false" aria-label="Ativar modo dia caótico">
+          <span>modo dia caótico</span><span class="tr" aria-hidden="true"></span>
+        </button>
+      </div>
+      <p class="lead" style="margin-top:24px;color:var(--txt);font-family:var(--disp);font-weight:700;font-size:21px;letter-spacing:-.03em">quando tudo parece demais, veja só o essencial.</p>
+    </div>
+    <div class="rev">
+      <div class="card" id="telaCaos" style="max-width:380px;margin:0 auto">
+        <div class="ph-row"><span class="ph-lab">hoje</span><span class="ph-pill" id="pillCaos">8 informações</span></div>
+        <div style="margin-top:14px;display:flex;flex-direction:column;gap:10px">
+          <div class="card plano" style="padding:14px"><span class="ph-lab">agora</span><div class="med" style="font-size:20px;margin-top:4px">16:00 · trabalho</div></div>
+          <div class="card plano" style="padding:14px"><span class="ph-lab">medicamento</span><div class="med" style="font-size:20px;margin-top:4px">21:00 · pendente</div></div>
+          <div class="card plano" style="padding:14px"><span class="ph-lab">água</span><div class="med" style="font-size:20px;margin-top:4px;color:var(--azul)">1,7 L / 2,5 L</div></div>
+          <div class="card plano" style="padding:14px"><span class="ph-lab">próximo compromisso</span><div class="med" style="font-size:20px;margin-top:4px">17:30 · academia</div></div>
+          <div class="card plano" style="padding:14px"><span class="ph-lab">prioridade</span><div class="med" style="font-size:20px;margin-top:4px">fechar a proposta</div></div>
+          <div class="card plano some" style="padding:14px"><span class="ph-lab">calorias</span><div class="med" style="font-size:20px;margin-top:4px">1.260 / 1.700 kcal</div></div>
+          <div class="card plano some" style="padding:14px"><span class="ph-lab">gastos de hoje</span><div class="med" style="font-size:20px;margin-top:4px">R$ 32,40</div></div>
+          <div class="card plano some" style="padding:14px"><span class="ph-lab">check-in de humor</span><div class="med" style="font-size:20px;margin-top:4px">ainda não registrado</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ Filosofia ============================ -->
+<section class="filo">
+  <div class="wrap rev">
+    <p class="grande">dias reais <i>&gt;</i> dias perfeitos.</p>
+    <div class="lista">
+      <span>sem streak perdido.</span>
+      <span>sem “você falhou”.</span>
+      <span>sem precisar começar de novo toda segunda-feira.</span>
+    </div>
+    <p class="fecho">só continua.</p>
+  </div>
+</section>
+
+<!-- ============================ Insights ============================ -->
+<section class="sec" style="background:#FBFAF7;border-block:1px solid var(--linha)">
+  <div class="wrap">
+    <div style="max-width:620px">
+      <p class="eyebrow rev">insights</p>
+      <h2 class="rev" style="margin:18px 0 14px">seus registros começam a fazer sentido juntos.</h2>
+      <p class="lead rev">o muse. compara o que você registrou. sem diagnóstico, sem palpite, sem inventar número que você não escreveu.</p>
+    </div>
+    <div class="ins-grid rev" style="margin-top:44px">
+      <div class="ins"><div class="v" style="color:var(--azul)">+18%</div><p>mais água nos dias em que você treinou, nos seus registros do mês.</p></div>
+      <div class="ins"><div class="v" style="color:var(--verde)">R$ 214</div><p>menos gastos fora de casa este mês, comparando com o anterior.</p></div>
+      <div class="ins"><div class="v">6 de 7</div><p>dias com alimentação registrada na última semana.</p></div>
+      <div class="ins"><div class="v" style="color:var(--ocre)">terça</div><p>parece existir uma tendência: costuma ser seu dia mais cheio.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ Progresso ============================ -->
+<section class="sec">
+  <div class="wrap dupla">
+    <div class="rev">
+      <p class="eyebrow">progresso</p>
+      <h2 style="margin:18px 0 20px">veja sua semana.<br>não uma nota.</h2>
+      <p class="lead">sem score geral, sem porcentagem de produtividade, sem transformar a sua vida em indicador. só o que aconteceu, dia a dia.</p>
+    </div>
+    <div class="rev">
+      <div class="card" style="max-width:440px;margin:0 auto">
+        <div class="ph-row" style="margin-bottom:16px"><span class="ph-lab">últimos 7 dias</span><span class="mut" style="font-size:13px">13 a 19 de agosto</span></div>
+        <div class="prog">
+          <span class="prog-lab">água</span>
+          <div class="prog-dias" data-cor="var(--azul)" data-v="90,70,100,55,85,100,60"></div>
+          <span class="prog-lab">alimentação</span>
+          <div class="prog-dias" data-cor="var(--roxo)" data-v="100,100,80,100,0,100,90"></div>
+          <span class="prog-lab">treinos</span>
+          <div class="prog-dias" data-cor="var(--lilas)" data-v="100,0,100,0,0,100,0"></div>
+          <span class="prog-lab">sono</span>
+          <div class="prog-dias" data-cor="var(--lilas)" data-v="60,80,70,45,90,100,85"></div>
+          <span class="prog-lab">humor</span>
+          <div class="prog-dias" data-cor="var(--ocre)" data-v="70,60,80,40,90,100,75"></div>
+          <span class="prog-lab">finanças</span>
+          <div class="prog-dias" data-cor="var(--verde)" data-v="100,100,100,60,100,100,100"></div>
+          <span></span>
+          <div class="prog-cab"><span>qui</span><span>sex</span><span>sáb</span><span>dom</span><span>seg</span><span>ter</span><span>qua</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ Showcase ============================ -->
+<section class="sec-sm" style="overflow:hidden">
+  <div class="wrap" style="margin-bottom:34px">
+    <p class="eyebrow rev">o produto</p>
+    <h2 class="rev" style="margin-top:18px">cinco telas.<br>o mesmo lugar.</h2>
+  </div>
+  <div class="showcase rev" role="list" aria-label="Telas do aplicativo muse.">
+
+    <figure role="listitem">
+      <div class="phone" style="width:250px">
+        <div class="phone-screen" style="min-height:470px">
+          <div class="ph-status"><span>9:41</span><span class="dots"><i></i><i></i><i></i></span></div>
+          <div class="ph-body">
+            <div style="padding:6px 2px"><div class="ph-h" style="font-size:22px">hoje.</div><div class="ph-sub">quarta, 19 de agosto</div></div>
+            <div class="ph-card"><span class="ph-lab">agora</span><div class="ph-big" style="margin-top:5px;font-size:23px">09:00 <span style="font-size:12px;font-weight:600">trabalho</span></div></div>
+            <div class="ph-card"><span class="ph-lab">3 prioridades</span>
+              <div style="margin-top:6px;font-size:12.5px;display:flex;flex-direction:column;gap:6px">
+                <span style="color:var(--mut);text-decoration:line-through">responder e-mails</span><span>fechar a proposta</span><span>comprar café</span></div></div>
+            <div class="ph-card"><span class="ph-lab">o dia</span><div class="ph-bar" style="margin-top:8px"><i style="width:62%"></i></div>
+              <div style="font-size:11px;color:var(--mut);margin-top:7px">5 de 8 blocos</div></div>
+          </div>
+          <div class="ph-nav"><span class="on">hoje</span><span>rotina</span><span class="mais">+</span><span>finanças</span><span>bem-estar</span></div>
+        </div>
+      </div>
+      <figcaption>hoje.</figcaption>
+    </figure>
+
+    <figure role="listitem">
+      <div class="phone" style="width:250px">
+        <div class="phone-screen" style="min-height:470px">
+          <div class="ph-status"><span>9:41</span><span class="dots"><i></i><i></i><i></i></span></div>
+          <div class="ph-body">
+            <div style="padding:6px 2px"><div class="ph-h" style="font-size:22px">rotina.</div><div class="ph-sub">4 blocos hoje</div></div>
+            <div class="ph-card">
+              <div class="ph-item"><span class="ph-hora">08:00</span><span style="flex:1">trabalho</span><span class="ph-tick on"><svg viewBox="0 0 24 24"><path d="M4 12.5l5.5 5.5L20 6.5"/></svg></span></div>
+              <div class="ph-item"><span class="ph-hora">12:00</span><span style="flex:1">almoço</span><span class="ph-tick on"><svg viewBox="0 0 24 24"><path d="M4 12.5l5.5 5.5L20 6.5"/></svg></span></div>
+              <div class="ph-item"><span class="ph-hora">17:30</span><span style="flex:1">academia</span><span class="ph-tick"><svg viewBox="0 0 24 24"><path d="M4 12.5l5.5 5.5L20 6.5"/></svg></span></div>
+              <div class="ph-item"><span class="ph-hora">19:00</span><span style="flex:1">faculdade</span><span class="ph-tick"><svg viewBox="0 0 24 24"><path d="M4 12.5l5.5 5.5L20 6.5"/></svg></span></div>
+            </div>
+            <div class="ph-card"><span class="ph-lab">a semana</span>
+              <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:9px">
+                <i style="height:26px;border-radius:6px;background:var(--roxo);display:block"></i><i style="height:26px;border-radius:6px;background:var(--roxo);display:block"></i>
+                <i style="height:26px;border-radius:6px;background:var(--lilas);display:block"></i><i style="height:26px;border-radius:6px;background:var(--linha2);display:block"></i>
+                <i style="height:26px;border-radius:6px;background:var(--roxo);display:block"></i><i style="height:26px;border-radius:6px;background:var(--lilas);display:block"></i>
+                <i style="height:26px;border-radius:6px;background:var(--linha2);display:block"></i>
+              </div></div>
+          </div>
+          <div class="ph-nav"><span>hoje</span><span class="on">rotina</span><span class="mais">+</span><span>finanças</span><span>bem-estar</span></div>
+        </div>
+      </div>
+      <figcaption>rotina.</figcaption>
+    </figure>
+
+    <figure role="listitem">
+      <div class="phone" style="width:250px">
+        <div class="phone-screen" style="min-height:470px">
+          <div class="ph-status"><span>9:41</span><span class="dots"><i></i><i></i><i></i></span></div>
+          <div class="ph-body">
+            <div style="padding:6px 2px"><div class="ph-h" style="font-size:22px">alimentação.</div><div class="ph-sub">faltam 440 kcal</div></div>
+            <div class="ph-card">
+              <div class="ph-big" style="font-size:30px">1.260<small> / 1.700 kcal</small></div>
+              <div class="ph-bar" style="margin-top:9px"><i style="width:74%"></i></div>
+              <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px">
+                <div><div class="ph-row" style="font-size:11px;color:var(--mut)"><span>proteína</span><span>94 / 125 g</span></div><div class="ph-bar"><i style="width:75%;background:var(--lilas)"></i></div></div>
+                <div><div class="ph-row" style="font-size:11px;color:var(--mut)"><span>carboidrato</span><span>148 / 190 g</span></div><div class="ph-bar"><i style="width:78%;background:var(--ocre)"></i></div></div>
+              </div>
+            </div>
+            <div class="ph-card"><span class="ph-lab">água</span><div class="ph-big" style="margin-top:5px;font-size:23px;color:var(--azul)">1,7 L<small> / 2,5 L</small></div>
+              <div class="ph-bar" style="margin-top:8px"><i style="width:68%;background:var(--azul)"></i></div></div>
+          </div>
+          <div class="ph-nav"><span>hoje</span><span>rotina</span><span class="mais">+</span><span>finanças</span><span>bem-estar</span></div>
+        </div>
+      </div>
+      <figcaption>alimentação.</figcaption>
+    </figure>
+
+    <figure role="listitem">
+      <div class="phone" style="width:250px">
+        <div class="phone-screen" style="min-height:470px">
+          <div class="ph-status"><span>9:41</span><span class="dots"><i></i><i></i><i></i></span></div>
+          <div class="ph-body">
+            <div style="padding:6px 2px"><div class="ph-h" style="font-size:22px">finanças.</div><div class="ph-sub">agosto</div></div>
+            <div class="ph-card"><span class="ph-lab">sobrou este mês</span><div class="ph-big" style="margin-top:5px;color:var(--roxo)">R$ 1.360</div>
+              <div style="font-size:11px;color:var(--mut);margin-top:7px">R$ 113 por dia nos 12 dias que faltam</div></div>
+            <div class="ph-card"><span class="ph-lab">por categoria</span>
+              <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px">
+                <div><div class="ph-row" style="font-size:11px"><span>mercado</span><span class="mut">R$ 620</span></div><div class="ph-bar"><i style="width:88%"></i></div></div>
+                <div><div class="ph-row" style="font-size:11px"><span>transporte</span><span class="mut">R$ 340</span></div><div class="ph-bar"><i style="width:48%;background:var(--lilas)"></i></div></div>
+                <div><div class="ph-row" style="font-size:11px"><span>lazer</span><span class="mut">R$ 210</span></div><div class="ph-bar"><i style="width:30%;background:var(--ocre)"></i></div></div>
+              </div></div>
+            <div class="ph-card" style="border-color:#CFE0D6;background:#F6FAF7"><span class="ph-lab" style="color:#4E7D62">meta · viagem</span>
+              <div class="ph-bar" style="margin-top:9px"><i style="width:38%;background:var(--verde)"></i></div></div>
+          </div>
+          <div class="ph-nav"><span>hoje</span><span>rotina</span><span class="mais">+</span><span class="on">finanças</span><span>bem-estar</span></div>
+        </div>
+      </div>
+      <figcaption>finanças.</figcaption>
+    </figure>
+
+    <figure role="listitem">
+      <div class="phone" style="width:250px">
+        <div class="phone-screen" style="min-height:470px">
+          <div class="ph-status"><span>9:41</span><span class="dots"><i></i><i></i><i></i></span></div>
+          <div class="ph-body">
+            <div style="padding:6px 2px"><div class="ph-h" style="font-size:22px">bem-estar.</div><div class="ph-sub">check-in de hoje</div></div>
+            <div class="ph-card"><span class="ph-lab">como você está agora</span>
+              <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:9px">
+                <span class="ph-pill" style="background:var(--roxo);color:#fff">tranquila</span>
+                <span class="ph-pill" style="background:var(--linha2);color:var(--mut)">ansiosa</span>
+                <span class="ph-pill" style="background:var(--linha2);color:var(--mut)">cansada</span>
+              </div></div>
+            <div class="ph-card"><span class="ph-lab">medicamentos</span>
+              <div style="margin-top:8px;font-size:12.5px;display:flex;flex-direction:column;gap:5px">
+                <span><b style="color:var(--roxo)">08:00</b> registrado</span><span class="mut"><b>21:00</b> pendente</span></div>
+              <div style="display:grid;grid-template-columns:repeat(15,1fr);gap:3px;margin-top:11px">
+                <i style="aspect-ratio:1;border-radius:3px;background:var(--roxo);display:block"></i><i style="aspect-ratio:1;border-radius:3px;background:var(--roxo);display:block"></i>
+                <i style="aspect-ratio:1;border-radius:3px;background:var(--linha2);display:block"></i><i style="aspect-ratio:1;border-radius:3px;background:var(--roxo);display:block"></i>
+                <i style="aspect-ratio:1;border-radius:3px;background:var(--roxo);display:block"></i><i style="aspect-ratio:1;border-radius:3px;background:var(--roxo);display:block"></i>
+                <i style="aspect-ratio:1;border-radius:3px;background:var(--roxo);display:block"></i><i style="aspect-ratio:1;border-radius:3px;background:var(--linha2);display:block"></i>
+                <i style="aspect-ratio:1;border-radius:3px;background:var(--roxo);display:block"></i><i style="aspect-ratio:1;border-radius:3px;background:var(--roxo);display:block"></i>
+                <i style="aspect-ratio:1;border-radius:3px;background:var(--roxo);display:block"></i><i style="aspect-ratio:1;border-radius:3px;background:var(--roxo);display:block"></i>
+                <i style="aspect-ratio:1;border-radius:3px;background:var(--roxo);display:block"></i><i style="aspect-ratio:1;border-radius:3px;background:var(--linha2);display:block"></i>
+                <i style="aspect-ratio:1;border-radius:3px;background:var(--roxo);display:block"></i>
+              </div></div>
+            <div class="ph-card"><span class="ph-lab">caixa de ferramentas</span>
+              <div style="font-size:12.5px;margin-top:7px;color:var(--mut)">respiração 4-7-8 · grounding · pausa</div></div>
+          </div>
+          <div class="ph-nav"><span>hoje</span><span>rotina</span><span class="mais">+</span><span>finanças</span><span class="on">bem-estar</span></div>
+        </div>
+      </div>
+      <figcaption>bem-estar.</figcaption>
+    </figure>
+  </div>
+  <div class="wrap" style="text-align:center;margin-top:16px">
+    <a href="app.html" class="btn ghost rev">experimentar muse.</a>
+  </div>
+</section>
+
+<!-- ============================ Privacidade ============================ -->
+<section class="sec" id="privacidade" style="background:#FBFAF7;border-block:1px solid var(--linha)">
+  <div class="wrap">
+    <div style="max-width:620px">
+      <p class="eyebrow rev">privacidade</p>
+      <h2 class="rev" style="margin:18px 0 20px">sua vida continua sendo sua.</h2>
+      <p class="lead rev">rotina, alimentação, emoções e dinheiro são informações pessoais. tratamos isso como deveria ser tratado: com cuidado.</p>
+    </div>
+    <div class="priv-lista rev">
+      <div>seus registros ficam no seu aparelho</div>
+      <div>exportação completa em um arquivo</div>
+      <div>nenhum dado é vendido ou compartilhado</div>
+      <div>sem publicidade baseada nos seus registros</div>
+    </div>
+    <p class="rev" style="margin-top:30px"><a href="privacidade.html">ver política de privacidade →</a></p>
+  </div>
+</section>
+
+<!-- ============================ Instalação ============================ -->
+<section class="sec">
+  <div class="wrap dupla">
+    <div class="rev">
+      <p class="eyebrow">instalação</p>
+      <h2 style="margin:18px 0 20px">muse. no seu celular.</h2>
+      <p class="lead">instale direto pelo navegador e use como um aplicativo. sem loja, sem cadastro, sem download.</p>
+      <a href="app.html" class="btn" style="margin-top:28px">instalar muse.</a>
+    </div>
+    <div class="rev">
+      <div class="abas-so" role="tablist" aria-label="Sistema">
+        <button role="tab" aria-selected="true" data-so="ios">iphone</button>
+        <button role="tab" aria-selected="false" data-so="android">android</button>
+        <button role="tab" aria-selected="false" data-so="desktop">computador</button>
+      </div>
+      <div class="passos" id="passosInstalar"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ CTA final ============================ -->
+<section class="final">
+  <div class="wrap rev">
+    <img src="logo.png" alt="muse." class="logo">
+    <h2>sua vida não precisa caber na sua cabeça.</h2>
+    <p class="sub">coloca no muse.</p>
+    <div style="margin-top:40px"><a href="app.html" class="btn" style="font-size:19px;padding:18px 34px">começar meu dia</a></div>
+    <p class="micro" style="margin-top:18px">leva menos de 2 minutos.</p>
+  </div>
+</section>
+
+</main>
+
+<!-- ============================ Rodapé ============================ -->
+<footer>
+  <div class="wrap">
+    <div class="foot-in">
+      <img src="logo.png" alt="muse." style="height:19px;width:auto">
+      <nav class="foot-links" aria-label="Rodapé">
+        <a href="#como-funciona">produto</a>
+        <a href="#privacidade">privacidade</a>
+        <a href="app.html">ajuda</a>
+        <a href="#beneficios">sobre</a>
+      </nav>
+    </div>
+    <p class="foot-fim">feito para dias reais.</p>
+  </div>
+</footer>
+
+<script>
+"use strict";
+const $=(s,r)=>(r||document).querySelector(s), $$=(s,r)=>Array.from((r||document).querySelectorAll(s));
+const reduz=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ---------- navbar com borda ao rolar ---------- */
+const nav=$("#navbar");
+addEventListener("scroll",()=>nav.classList.toggle("scrolled",scrollY>10),{passive:true});
+
+/* ---------- revelação no scroll ---------- */
+const obs=new IntersectionObserver(es=>es.forEach(e=>{
+  if(e.isIntersecting){e.target.classList.add("vis");obs.unobserve(e.target);}
+}),{threshold:.12,rootMargin:"0px 0px -8%"});
+$$(".rev").forEach(el=>obs.observe(el));
+
+/* ---------- hero: água sobe e tarefa é marcada, uma vez só ---------- */
+if(!reduz){
+  const heroObs=new IntersectionObserver(es=>es.forEach(e=>{
+    if(!e.isIntersecting)return;
+    heroObs.disconnect();
+    setTimeout(()=>{
+      $("#heroAgua").textContent="1,4";
+      $("#heroCopo").style.height="56%";
+    },1400);
+    setTimeout(()=>{
+      $("#heroTick").classList.add("on");
+      $("#heroTarefa").style.cssText="text-decoration:line-through;color:var(--mut);transition:color .3s";
+      $("#heroRest").textContent="2 tarefas restantes";
+    },2600);
+  }),{threshold:.4});
+  heroObs.observe($("#phoneHero"));
+}
+
+/* ---------- quebra editorial: os apps somem, muse. fica ---------- */
+new IntersectionObserver(es=>es.forEach(e=>{
+  if(e.isIntersecting){e.target.classList.add("on");}
+}),{threshold:.6}).observe($("#quebra1"));
+
+/* ---------- abas convergindo ---------- */
+new IntersectionObserver(es=>es.forEach(e=>{
+  if(e.isIntersecting){setTimeout(()=>e.target.classList.add("convergiu"),450);}
+}),{threshold:.5}).observe($("#abasBox"));
+
+/* ---------- água interativa ---------- */
+(function(){
+  const META=2500; let ml=1700;
+  const val=$("#aguaVal"), copo=$("#copoGrande");
+  const pinta=()=>{
+    val.textContent=(ml/1000).toFixed(1).replace(".",",");
+    copo.style.height=Math.min(100,ml/META*100)+"%";
+  };
+  $$("[data-ml]").forEach(b=>b.onclick=()=>{
+    ml=Math.min(META+500,ml+ +b.dataset.ml); pinta();
+  });
+  pinta();
+})();
+
+/* ---------- posso comprar? ---------- */
+(function(){
+  const ECON=620, inp=$("#valorCompra"), res=$("#resCompra");
+  const brl=v=>"R$ "+Math.round(v).toLocaleString("pt-BR");
+  function calcular(){
+    const v=Math.max(0,parseFloat(inp.value.replace(/\./g,"").replace(",","."))||0);
+    const depois=ECON-v;
+    const cabe=depois>=0;
+    res.className="calc-res"+(cabe?"":" alerta");
+    res.innerHTML=cabe
+      ? `<div class="calc-tit ok">cabe no seu orçamento.</div>
+         <div class="faixa-antes-depois"><span class="mut">economia prevista</span>
+         <b>${brl(ECON)}</b><span class="seta">→</span><b style="color:${depois<200?"var(--ocre)":"var(--verde)"}">${brl(depois)}</b></div>
+         ${depois<200?'<p class="mut" style="font-size:13.5px;margin-top:10px">sobraria pouca folga para imprevistos.</p>':""}`
+      : `<div class="calc-tit nao">passa do que sobra este mês.</div>
+         <div class="faixa-antes-depois"><span class="mut">faltariam</span>
+         <b style="color:var(--terra)">${brl(Math.abs(depois))}</b></div>
+         <p class="mut" style="font-size:13.5px;margin-top:10px">ainda é sua escolha — o muse. só mostra a conta.</p>`;
+  }
+  inp.addEventListener("input",calcular);
+  calcular();
+})();
+
+/* ---------- humor ---------- */
+$$("[data-humor]").forEach(b=>b.onclick=()=>{
+  $$("[data-humor]").forEach(x=>x.classList.remove("on")); b.classList.add("on");
+});
+
+/* ---------- recomeçar daqui ---------- */
+(function(){
+  const btn=$("#btnRetomar"), box=$("#retomada");
+  btn.onclick=()=>{
+    const aberto=box.classList.toggle("aberta");
+    btn.setAttribute("aria-expanded",aberto);
+    btn.textContent=aberto?"pronto, seguindo daqui":"recomeçar daqui";
+  };
+})();
+
+/* ---------- modo dia caótico ---------- */
+(function(){
+  const sw=$("#switchCaos"), tela=$("#telaCaos"), pill=$("#pillCaos");
+  sw.onclick=()=>{
+    const on=sw.classList.toggle("on");
+    sw.setAttribute("aria-checked",on);
+    tela.classList.toggle("calmo",on);
+    pill.textContent=on?"5 informações":"8 informações";
+  };
+})();
+
+/* ---------- barras de progresso ---------- */
+$$(".prog-dias").forEach(el=>{
+  const cor=el.dataset.cor, vals=el.dataset.v.split(",");
+  el.innerHTML=vals.map(v=>{
+    const n=+v;
+    return `<i style="background:${n?cor:"var(--linha2)"};opacity:${n?(0.32+n/100*0.68).toFixed(2):1}"></i>`;
+  }).join("");
+});
+
+/* ---------- instalação: detecta o sistema ---------- */
+(function(){
+  const PASSOS={
+    ios:[["abra esta página no Safari","o Chrome do iPhone não instala aplicativos"],
+         ["toque no botão de compartilhar","o quadrado com a seta para cima, na barra de baixo"],
+         ["escolha adicionar à tela de início",""],
+         ["confirme o nome muse.","o ícone entra junto com os outros aplicativos"]],
+    android:[["abra esta página no Chrome",""],
+         ["toque nos três pontinhos","canto superior direito"],
+         ["escolha instalar aplicativo","ou adicionar à tela inicial"],
+         ["confirme","o muse. abre em tela cheia, sem barra do navegador"]],
+    desktop:[["abra esta página no Chrome ou Edge",""],
+         ["clique no ícone de instalar","fica na barra de endereço, à direita"],
+         ["confirme a instalação",""],
+         ["o muse. abre em janela própria","funciona offline depois da primeira abertura"]]
+  };
+  const box=$("#passosInstalar"), abas=$$("[data-so]");
+  function mostrar(so){
+    abas.forEach(b=>{const on=b.dataset.so===so;b.classList.toggle("on",on);b.setAttribute("aria-selected",on);});
+    box.innerHTML=PASSOS[so].map((p,i)=>
+      `<div class="passo"><b>0${i+1}.</b><div>${p[0]}${p[1]?`<div class="mut" style="font-size:14px;margin-top:3px">${p[1]}</div>`:""}</div></div>`).join("");
+  }
+  abas.forEach(b=>b.onclick=()=>mostrar(b.dataset.so));
+  const ua=navigator.userAgent;
+  const ios=/iPad|iPhone|iPod/.test(ua)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+  mostrar(ios?"ios":/Android/.test(ua)?"android":"desktop");
+})();
+</script>
+</body>
+</html>

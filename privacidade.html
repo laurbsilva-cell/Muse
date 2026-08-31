@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>privacidade — muse.</title>
+<meta name="description" content="Como o muse. trata os seus dados: tudo fica no seu aparelho.">
+<meta name="theme-color" content="#F3F1EC">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.json">
+<style>
+:root{--roxo:#783A8A;--roxo-escuro:#5E2C6D;--creme:#F3F1EC;--branco:#fff;--txt:#2B2430;--mut:#8A8292;--linha:#E5E1D7;
+  --disp:ui-rounded,"SF Pro Rounded","Hiragino Maru Gothic ProN","Varela Round","Nunito","Trebuchet MS",system-ui,sans-serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","Inter",Roboto,"Helvetica Neue",Arial,sans-serif}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--creme);color:var(--txt);font-family:var(--sans);font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:660px;margin:0 auto;padding:0 22px}
+a{color:var(--roxo)}
+:focus-visible{outline:2.5px solid var(--roxo);outline-offset:3px}
+header{padding:26px 0;border-bottom:1px solid var(--linha)}
+header .wrap{max-width:1200px;display:flex;justify-content:space-between;align-items:center}
+header img{height:19px;width:auto;display:block}
+h1{font-family:var(--disp);font-weight:700;font-size:clamp(34px,7vw,54px);letter-spacing:-.04em;text-transform:lowercase;line-height:1.05;margin:56px 0 10px}
+h2{font-family:var(--disp);font-weight:700;font-size:23px;letter-spacing:-.03em;text-transform:lowercase;margin:44px 0 12px}
+p{margin-bottom:14px;color:#413A4B}
+ul{margin:0 0 14px 20px;color:#413A4B}
+li{margin-bottom:8px}
+.data{color:var(--mut);font-size:14.5px;margin-bottom:40px}
+.destaque{background:var(--branco);border:1px solid var(--linha);border-radius:20px;padding:24px;margin:8px 0 20px;
+  box-shadow:0 1px 2px rgba(43,36,48,.04),0 8px 24px rgba(43,36,48,.05)}
+.destaque p:last-child{margin-bottom:0}
+footer{margin-top:80px;border-top:1px solid var(--linha);padding:34px 0 60px;color:var(--mut);font-size:15px}
+.voltar{font-family:var(--disp);font-weight:700;letter-spacing:-.02em}
+</style>
+</head>
+<body>
+<header><div class="wrap"><a href="index.html"><img src="logo.png" alt="muse."></a><a href="index.html" class="voltar">← voltar</a></div></header>
+
+<main class="wrap">
+  <h1>sua vida continua sendo sua.</h1>
+  <p class="data">atualizada em 19 de agosto de 2026</p>
+
+  <div class="destaque">
+    <p><strong>O resumo:</strong> o muse. guarda tudo o que você registra no armazenamento local do seu próprio navegador. Não existe servidor, conta, login nem sincronização. Nada do que você escreve sai do aparelho, a menos que você mesma exporte o arquivo de backup.</p>
+  </div>
+
+  <h2>o que fica guardado</h2>
+  <p>Rotina, tarefas, refeições, água, lançamentos financeiros, metas, check-ins de humor, lembretes de medicação, contatos de confiança e o diário. Tudo isso fica no <code>localStorage</code> do navegador em que você abriu o muse.</p>
+
+  <h2>o que não coletamos</h2>
+  <ul>
+    <li>Não pedimos nome de usuário, e-mail ou senha.</li>
+    <li>Não usamos rastreadores, pixels de anúncio ou ferramentas de analytics.</li>
+    <li>Não enviamos os seus registros para lugar nenhum.</li>
+    <li>Não vendemos, compartilhamos nem cruzamos os seus dados com terceiros.</li>
+    <li>Não exibimos publicidade — nem baseada nos seus registros, nem de outro tipo.</li>
+  </ul>
+
+  <h2>controle e exportação</h2>
+  <p>Em Configurações você pode exportar tudo em um arquivo JSON, importar um backup e apagar todos os dados de uma vez. Apagar é definitivo: não temos cópia para restaurar, porque nunca tivemos cópia nenhuma.</p>
+  <p>Como os dados vivem no navegador, limpar os dados do site, desinstalar o app ou trocar de aparelho remove os registros. O backup é o jeito de levá-los junto.</p>
+
+  <h2>notificações</h2>
+  <p>Os lembretes usam a API de notificações do próprio navegador e são agendados no aparelho. Não há servidor de push nem qualquer envio de informação para fora. A permissão só é solicitada quando você toca no botão em Configurações, e pode ser revogada nas configurações do navegador a qualquer momento.</p>
+
+  <h2>hospedagem</h2>
+  <p>A página é servida como um site estático. O provedor de hospedagem pode registrar dados técnicos de acesso, como endereço IP e tipo de navegador, do mesmo jeito que qualquer site na internet. Esses registros são do provedor e não têm relação com o conteúdo que você guarda no app.</p>
+
+  <h2>dados sensíveis</h2>
+  <p>Humor, medicação e finanças são informações pessoais delicadas. É exatamente por isso que a arquitetura do muse. é local: quanto menos dado sai do aparelho, menos dado existe para vazar. O muse. é uma ferramenta de organização e registro — não interpreta sintomas, não dá orientação clínica e não substitui acompanhamento profissional.</p>
+
+  <h2>mudanças</h2>
+  <p>Se esta política mudar, a data no topo muda junto. Alterações relevantes aparecem também dentro do aplicativo.</p>
+
+  <h2>contato</h2>
+  <p>Dúvidas sobre privacidade podem ser enviadas pelo canal indicado na página inicial.</p>
+</main>
+
+<footer><div class="wrap">feito para dias reais.</div></footer>
+</body>
+</html>
