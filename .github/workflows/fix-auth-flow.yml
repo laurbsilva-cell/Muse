@@ -3,7 +3,7 @@ name: Fix Muse auth flow
 on:
   push:
     paths:
-      - '.github/workflows/fix-auth-flow.yml'
+      - ".github/workflows/fix-auth-flow.yml"
 
 permissions:
   contents: write
@@ -12,45 +12,27 @@ jobs:
   patch-auth-flow:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Patch nuvem.js
-        shell: python
+      - name: Patch auth startup
         run: |
+          python3 <<'PY'
           from pathlib import Path
 
-          path = Path('nuvem.js')
-          text = path.read_text(encoding='utf-8')
+          path = Path("nuvem.js")
+          text = path.read_text(encoding="utf-8")
+          marker = "  /* ---------------------------------------------------------\n     INÍCIO\n     --------------------------------------------------------- */\n  N.iniciar = async function () {"
+          start = text.find(marker)
+          if start < 0:
+              raise SystemExit("Bloco INÍCIO não encontrado")
 
-          old = '''  /* ---------------------------------------------------------
-     INÍCIO
-     --------------------------------------------------------- */
-  N.iniciar = async function () {
-    pintarEstado();
-    if (!LIGADO) return;
-    try {
-      const c = await cliente();
-      const { data } = await c.auth.getSession();
-      sessao = data.session || null;
-      c.auth.onAuthStateChange(async (evt, s) => {
-        const trocou = sessao && s && sessao.user.id !== s.user.id;
-        sessao = s; N.usuario = s ? { id: s.user.id, email: s.user.email, nome: s.user.user_metadata?.full_name } : null;
-        if (trocou) { location.reload(); return; }
-        if (s) { N.estado = "ok"; pintarEstado(); await N.sincronizar(true); }
-        else { N.estado = "local"; pintarEstado(); }
-      });
-      if (sessao) {
-        N.usuario = { id: sessao.user.id, email: sessao.user.email, nome: sessao.user.user_metadata?.full_name };
-        await N.sincronizar(true);
-        setInterval(() => N.sincronizar(true), C.SYNC_INTERVALO || 60000);
-      }
-    } catch (e) { console.warn("nuvem:", e); N.estado = "erro"; pintarEstado(); }
-  };
-  if (document.readyState !== "loading") N.iniciar(); else addEventListener("DOMContentLoaded", N.iniciar);
-})();'''
+          end_marker = '  if (document.readyState !== "loading") N.iniciar(); else addEventListener("DOMContentLoaded", N.iniciar);\n})();'
+          end = text.find(end_marker, start)
+          if end < 0:
+              raise SystemExit("Fim do bloco INÍCIO não encontrado")
+          end += len(end_marker)
 
-          new = '''  /* ---------------------------------------------------------
+          replacement = r'''  /* ---------------------------------------------------------
      ENTRADA APÓS AUTENTICAÇÃO
      O app.html decide a tela antes de nuvem.js terminar de ler a sessão.
      Esta função reconcilia a interface assim que o Supabase confirma o login.
@@ -73,8 +55,7 @@ jobs:
       return;
     }
 
-    /* Aparelho novo + conta já existente: primeiro baixa a nuvem.
-       Isso evita enviar o estado vazio do aparelho por cima dos dados remotos. */
+    /* Em aparelho novo, baixe a conta antes de qualquer envio local. */
     if (!S.perfil && temPerfilRemoto) {
       await baixarTudo(c);
     }
@@ -91,7 +72,7 @@ jobs:
       if (app) app.classList.remove("hide");
       if (!appJaVisivel && typeof iniciarApp === "function") iniciarApp();
     } else {
-      /* Primeira conta, sem perfil local nem remoto: segue para o onboarding. */
+      /* Primeira conta, ainda sem perfil: segue para o onboarding. */
       const conta = document.getElementById("onbConta");
       if (conta) conta.classList.add("hide");
       if (typeof abrirOnb === "function") abrirOnb();
@@ -144,16 +125,17 @@ jobs:
   if (document.readyState !== "loading") N.iniciar(); else addEventListener("DOMContentLoaded", N.iniciar);
 })();'''
 
-          if old not in text:
-              raise SystemExit('Bloco de inicializacao esperado nao foi encontrado; nada foi alterado.')
-
-          path.write_text(text.replace(old, new, 1), encoding='utf-8')
+          path.write_text(text[:start] + replacement + text[end:], encoding="utf-8")
+          PY
 
       - name: Commit fix
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add nuvem.js
-          git diff --cached --quiet && exit 0
+          if git diff --cached --quiet; then
+            echo "No changes"
+            exit 0
+          fi
           git commit -m "fix: continue app flow after Google login"
           git push
