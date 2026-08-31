@@ -2,7 +2,7 @@
    Estratégia consciente: o shell fica em cache para abrir offline,
    o HTML tenta a rede primeiro para pegar atualização, e nada de
    resposta de API entra em cache. */
-const CACHE = "muse-v6";
+const CACHE = "muse-v7";
 const SHELL = [
   "./", "./index.html", "./app.html", "./privacidade.html",
   "./config.js", "./nuvem.js", "./manifest.json",
