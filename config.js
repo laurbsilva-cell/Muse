@@ -16,8 +16,8 @@
    5. cole abaixo Project URL e a chave anon (Settings → API)
 */
 window.MUSE_CONFIG = {
-  SUPABASE_URL: "",
-  SUPABASE_ANON_KEY: "",
+  SUPABASE_URL: "https://imtbtgyzviknrvkwylfv.supabase.co",
+  SUPABASE_ANON_KEY: "sb_publishable_o_m5ZdL6tcCJSPrXnumh2w_oh00pMEJ",
   /* de quanto em quanto tempo tentar sincronizar em segundo plano (ms) */
   SYNC_INTERVALO: 60000
 };
