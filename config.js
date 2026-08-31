@@ -21,3 +21,41 @@ window.MUSE_CONFIG = {
   /* de quanto em quanto tempo tentar sincronizar em segundo plano (ms) */
   SYNC_INTERVALO: 60000
 };
+
+/*
+  Correção do retorno do OAuth no PWA.
+  app.html monta a tela de entrada antes de nuvem.js terminar de recuperar a sessão.
+  Depois que o Supabase confirma o usuário, reconciliamos a tela sem pedir um segundo login.
+*/
+(function corrigirRetornoGoogle() {
+  let tentativas = 0;
+  const MAX_TENTATIVAS = 80;
+
+  function reconciliar() {
+    const N = window.Nuvem;
+
+    if (N && N.usuario) {
+      const conta = document.getElementById("onbConta");
+      const onb = document.getElementById("onb");
+      const app = document.getElementById("app");
+
+      if (typeof S !== "undefined" && S.perfil) {
+        const appJaVisivel = app && !app.classList.contains("hide");
+        if (conta) conta.classList.add("hide");
+        if (onb) onb.classList.add("hide");
+        if (app) app.classList.remove("hide");
+        if (!appJaVisivel && typeof iniciarApp === "function") iniciarApp();
+      } else {
+        if (conta) conta.classList.add("hide");
+        if (typeof abrirOnb === "function") abrirOnb();
+      }
+      return;
+    }
+
+    tentativas += 1;
+    if (tentativas < MAX_TENTATIVAS) setTimeout(reconciliar, 250);
+  }
+
+  if (document.readyState === "complete") setTimeout(reconciliar, 0);
+  else addEventListener("load", () => setTimeout(reconciliar, 0), { once: true });
+})();
