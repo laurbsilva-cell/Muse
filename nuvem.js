@@ -121,7 +121,7 @@
           nome: a.nome, met: a.met, minutos: a.min, esforco: a.intens || null, kcal_estimadas: a.kcal, observacao: a.obs || null }));
         return o; },
       gravar: (S, rs) => { const m = {}; rs.forEach(r => (m[r.dia] = m[r.dia] || []).push({ id: r.id, tipo: r.tipo, nome: r.nome,
-          met: +r.met, min: r.minutos, intens: r.esforco, kcal: r.kcal_estimadas, obs: r.observacao })); S.ativ.reg = m; } },
+        met: +r.met, min: r.minutos, intens: r.esforco, kcal: r.kcal_estimadas, obs: r.observacao })); S.ativ.reg = m; } },
 
     { t: "listas_compras", chave: "id",
       ler: S => S.compras.listas.map(l => ({ id: l.id, nome: l.nome, criada: l.criada, fechada: !!l.fechada,
@@ -156,6 +156,10 @@
       gravar: (S, rs) => { const m = {}; rs.forEach(r => m[r.dia] = { etapa: r.etapa, produto: r.produto, result: r.resultado, obs: r.observacao }); S.cabelo.logs = m; } }
   ];
 
+  /* id determinístico para registros que nunca tiveram id próprio
+     (água do dia, humor do dia, marcação de bloco). Deriva do conteúdo, então
+     reenviar a mesma marcação escreve na mesma linha em vez de duplicar.
+     Usa cyrb128 — quatro estados de 32 bits com boa dispersão. */
   function hashId(txt) {
     let h1 = 1779033703, h2 = 3144134277, h3 = 1013904242, h4 = 2773480762;
     for (let i = 0, k; i < txt.length; i++) {
@@ -174,6 +178,9 @@
   }
   N._hashId = hashId;
 
+  /* ---------------------------------------------------------
+     FILA OFFLINE (IndexedDB)
+     --------------------------------------------------------- */
   const DB = "muse-fila", LOJA = "pendentes";
   function abrirDB() {
     return new Promise((ok, err) => {
@@ -187,6 +194,7 @@
       const db = await abrirDB();
       await new Promise(ok => {
         const tx = db.transaction(LOJA, "readwrite");
+        /* chave = tabela+id: reenvio do mesmo registro substitui, não acumula */
         tx.objectStore(LOJA).put({ chave: tabela + ":" + (linha.id || "unico"), tabela, linha, em: Date.now() });
         tx.oncomplete = ok;
       });
@@ -203,6 +211,9 @@
     } catch { }
   }
 
+  /* ---------------------------------------------------------
+     CONEXÃO
+     --------------------------------------------------------- */
   async function cliente() {
     if (sb) return sb;
     const { createClient } = await import(CDN);
@@ -225,6 +236,7 @@
     const c = await cliente();
     await c.auth.signOut();
     sessao = null; N.usuario = null; N.estado = "local";
+    /* trocar de conta não pode misturar cache */
     try {
       const db = await abrirDB();
       await new Promise(ok => { const tx = db.transaction(LOJA, "readwrite"); tx.objectStore(LOJA).clear(); tx.oncomplete = ok; });
@@ -242,6 +254,11 @@
     return true;
   };
 
+  /* ---------------------------------------------------------
+     SINCRONIZAÇÃO
+     Última escrita vence, por registro. Registros com id estável,
+     então reenviar é idempotente.
+     --------------------------------------------------------- */
   async function enviarTudo(c, uid_) {
     for (const m of MAPA) {
       const linhas = m.ler(S).map(l => Object.assign({ user_id: uid_ }, l));
@@ -250,7 +267,6 @@
       if (error) throw new Error(m.t + ": " + error.message);
     }
   }
-
   async function baixarTudo(c) {
     for (const m of MAPA) {
       const { data, error } = await c.from(m.t).select("*");
@@ -261,7 +277,7 @@
   }
 
   N.sincronizar = async function (silencioso) {
-    if (!LIGADO || !sessao || sincronizando || !navigator.onLine) return false;
+    if (!LIGADO || !sessao || sincronizando || !navigator.onLine) return;
     sincronizando = true; N.estado = "sincronizando"; pintarEstado();
     try {
       const c = await cliente();
@@ -272,33 +288,16 @@
       }
       if (pend.length) await limparFila(pend.map(p => p.chave));
       await enviarTudo(c, sessao.user.id);
-      N.estado = "ok"; N.ultima = new Date(); N.erro = null;
+      N.estado = "ok"; N.ultima = new Date();
       if (!silencioso) toast("Sincronizado.");
-      return true;
     } catch (e) {
       console.warn("sync:", e);
       N.estado = "erro"; N.erro = e.message;
-      if (!silencioso) toast("Não consegui sincronizar agora: " + e.message);
-      return false;
+      if (!silencioso) toast("Não consegui sincronizar agora. Seus dados continuam salvos aqui.");
     } finally { sincronizando = false; pintarEstado(); }
   };
 
-  N.baixarDaNuvem = async function (silencioso) {
-    if (!LIGADO || !sessao || !navigator.onLine) return false;
-    try {
-      const c = await cliente();
-      await baixarTudo(c);
-      N.estado = "ok"; N.erro = null; pintarEstado();
-      if (!silencioso) toast("Dados restaurados da sua conta.");
-      return true;
-    } catch (e) {
-      console.warn("download da nuvem:", e);
-      N.estado = "erro"; N.erro = e.message; pintarEstado();
-      if (!silencioso) toast("Não consegui baixar seus dados: " + e.message);
-      return false;
-    }
-  };
-
+  /* migração local → nuvem, com prévia e possibilidade de voltar atrás */
   N.migrarParaNuvem = async function () {
     const c = await cliente();
     const resumo = MAPA.map(m => ({ t: m.t, n: m.ler(S).length })).filter(x => x.n);
@@ -332,6 +331,9 @@
     localStorage.setItem(CHAVE, b); location.reload();
   };
 
+  /* ---------------------------------------------------------
+     ESTADO VISÍVEL
+     --------------------------------------------------------- */
   function pintarEstado() {
     const el = document.getElementById("estadoNuvem"); if (!el) return;
     const off = !navigator.onLine;
@@ -344,6 +346,7 @@
   addEventListener("online", () => { pintarEstado(); N.sincronizar(true); });
   addEventListener("offline", pintarEstado);
 
+  /* salvar() local passa a alimentar a fila quando há conta */
   const salvarOriginal = window.salvar;
   window.salvar = function () {
     salvarOriginal.apply(this, arguments);
@@ -353,54 +356,9 @@
     }
   };
 
-  /* O onboarding cria o primeiro perfil. Enviamos imediatamente para a conta,
-     além do debounce normal, para que fechar o PWA logo depois não perca o cadastro. */
-  const finalizarOnbOriginal = window.finalizarOnb;
-  if (typeof finalizarOnbOriginal === "function") {
-    window.finalizarOnb = function () {
-      const r = finalizarOnbOriginal.apply(this, arguments);
-      if (LIGADO && sessao) setTimeout(() => N.sincronizar(false), 100);
-      return r;
-    };
-  }
-
-  let entradaResolvidaPara = null;
-  async function resolverEntradaAutenticada(c) {
-    if (!sessao) return false;
-    const uidAtual = sessao.user.id;
-    if (entradaResolvidaPara === uidAtual) return !!S.perfil;
-
-    /* Se este contexto do PWA não tem perfil local, a conta remota é a fonte.
-       Isso cobre troca de aparelho e também Safari x app instalado no iPhone. */
-    if (!S.perfil && navigator.onLine) {
-      try {
-        await baixarTudo(c);
-      } catch (e) {
-        console.warn("restauração da conta:", e);
-        N.estado = "erro"; N.erro = e.message; pintarEstado();
-        return false;
-      }
-    }
-
-    entradaResolvidaPara = uidAtual;
-    const conta = document.getElementById("onbConta");
-    const onb = document.getElementById("onb");
-    const app = document.getElementById("app");
-
-    if (S.perfil) {
-      const appJaVisivel = app && !app.classList.contains("hide");
-      if (conta) conta.classList.add("hide");
-      if (onb) onb.classList.add("hide");
-      if (app) app.classList.remove("hide");
-      if (!appJaVisivel && typeof iniciarApp === "function") iniciarApp();
-      return true;
-    }
-
-    if (conta) conta.classList.add("hide");
-    if (typeof abrirOnb === "function") abrirOnb();
-    return false;
-  }
-
+  /* ---------------------------------------------------------
+     INÍCIO
+     --------------------------------------------------------- */
   N.iniciar = async function () {
     pintarEstado();
     if (!LIGADO) return;
@@ -408,34 +366,19 @@
       const c = await cliente();
       const { data } = await c.auth.getSession();
       sessao = data.session || null;
-
       c.auth.onAuthStateChange(async (evt, s) => {
         const trocou = sessao && s && sessao.user.id !== s.user.id;
-        sessao = s;
-        N.usuario = s ? { id: s.user.id, email: s.user.email, nome: s.user.user_metadata?.full_name } : null;
+        sessao = s; N.usuario = s ? { id: s.user.id, email: s.user.email, nome: s.user.user_metadata?.full_name } : null;
         if (trocou) { location.reload(); return; }
-
-        if (s) {
-          N.estado = "ok"; pintarEstado();
-          const temPerfil = await resolverEntradaAutenticada(c);
-          if (temPerfil) await N.sincronizar(true);
-        } else {
-          entradaResolvidaPara = null;
-          N.estado = "local"; pintarEstado();
-        }
+        if (s) { N.estado = "ok"; pintarEstado(); await N.sincronizar(true); }
+        else { N.estado = "local"; pintarEstado(); }
       });
-
       if (sessao) {
         N.usuario = { id: sessao.user.id, email: sessao.user.email, nome: sessao.user.user_metadata?.full_name };
-        N.estado = "ok"; pintarEstado();
-        const temPerfil = await resolverEntradaAutenticada(c);
-        if (temPerfil) await N.sincronizar(true);
+        await N.sincronizar(true);
         setInterval(() => N.sincronizar(true), C.SYNC_INTERVALO || 60000);
       }
-    } catch (e) {
-      console.warn("nuvem:", e);
-      N.estado = "erro"; N.erro = e.message; pintarEstado();
-    }
+    } catch (e) { console.warn("nuvem:", e); N.estado = "erro"; pintarEstado(); }
   };
   if (document.readyState !== "loading") N.iniciar(); else addEventListener("DOMContentLoaded", N.iniciar);
 })();
