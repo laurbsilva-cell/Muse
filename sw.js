@@ -1,8 +1,8 @@
 /* muse. — service worker.
-   Estratégia consciente: o shell fica em cache para abrir offline,
-   o HTML tenta a rede primeiro para pegar atualização, e nada de
-   resposta de API entra em cache. */
-const CACHE = "muse-v7";
+   Shell em cache para abrir offline. Documentos e arquivos de autenticação
+   tentam a rede primeiro para que correções de login não fiquem presas em cache.
+   Respostas de APIs de terceiros nunca entram no cache. */
+const CACHE = "muse-v8";
 const SHELL = [
   "./", "./index.html", "./app.html", "./privacidade.html",
   "./config.js", "./nuvem.js", "./manifest.json",
@@ -26,32 +26,41 @@ self.addEventListener("activate", e => {
   );
 });
 
-/* a página avisa quando a pessoa aceitou atualizar */
-self.addEventListener("message", e => { if (e.data && e.data.tipo === "assumir") self.skipWaiting(); });
+self.addEventListener("message", e => {
+  if (e.data && e.data.tipo === "assumir") self.skipWaiting();
+});
 
 self.addEventListener("fetch", e => {
   const req = e.request;
   if (req.method !== "GET") return;
   const url = new URL(req.url);
 
-  /* nada de terceiros entra em cache: Open Food Facts e Supabase
-     respondem dado pessoal ou colaborativo que muda. */
+  /* Supabase, Open Food Facts e qualquer terceiro ficam fora do cache. */
   if (url.origin !== location.origin) return;
 
-  if (req.mode === "navigate" || req.destination === "document") {
+  /* Navegação e os dois scripts que controlam conta/login usam network-first. */
+  const authScript = /\/(config|nuvem)\.js$/.test(url.pathname);
+  if (req.mode === "navigate" || req.destination === "document" || authScript) {
     e.respondWith(
       fetch(req)
-        .then(r => { const c = r.clone(); caches.open(CACHE).then(k => k.put(req, c)); return r; })
-        .catch(() => caches.match(req).then(r => r || caches.match("./app.html")))
+        .then(r => {
+          const c = r.clone();
+          caches.open(CACHE).then(k => k.put(req, c));
+          return r;
+        })
+        .catch(() => caches.match(req).then(r => r || (req.destination === "document" ? caches.match("./app.html") : undefined)))
     );
     return;
   }
 
   e.respondWith(
     caches.match(req).then(r => r || fetch(req).then(resp => {
-      if (resp.ok && resp.type === "basic") { const c = resp.clone(); caches.open(CACHE).then(k => k.put(req, c)); }
+      if (resp.ok && resp.type === "basic") {
+        const c = resp.clone();
+        caches.open(CACHE).then(k => k.put(req, c));
+      }
       return resp;
-    }).catch(() => r))
+    }))
   );
 });
 
