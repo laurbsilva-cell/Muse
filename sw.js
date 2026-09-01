@@ -2,7 +2,7 @@
    Shell em cache para abrir offline. Documentos e arquivos de autenticação
    tentam a rede primeiro para que correções de login não fiquem presas em cache.
    Respostas de APIs de terceiros nunca entram no cache. */
-const CACHE = "muse-v8";
+const CACHE = "muse-v9";
 const SHELL = [
   "./", "./index.html", "./app.html", "./privacidade.html",
   "./config.js", "./nuvem.js", "./manifest.json",
