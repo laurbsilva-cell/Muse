@@ -1,20 +1,15 @@
-/* muse. — camada de nuvem: conta, sincronização e fila offline.
-   Fica inteiramente dormente enquanto config.js estiver vazio:
-   sem requisição, sem download de biblioteca, sem custo. */
+/* muse. — conta, sincronização e restauração entre aparelhos. */
 "use strict";
 (function () {
   const C = window.MUSE_CONFIG || {};
   const LIGADO = !!(C.SUPABASE_URL && C.SUPABASE_ANON_KEY);
   const CDN = "https://esm.sh/@supabase/supabase-js@2";
 
-  let sb = null, sessao = null, sincronizando = false;
-  const N = window.Nuvem = { ligada: LIGADO, estado: "local", usuario: null };
+  let sb = null, sessao = null, sincronizando = false, bootstrapPromise = null;
+  let authSub = null, syncTimer = null, appIniciado = false;
+  const N = window.Nuvem = { ligada: LIGADO, estado: "local", usuario: null, pronta: false };
+  const UID_KEY = (typeof CHAVE !== "undefined" ? CHAVE : "minhabase.v1") + ".conta-uid";
 
-  /* ---------------------------------------------------------
-     MAPA DE SINCRONIZAÇÃO
-     Uma linha por tabela. `ler` extrai do estado local, `gravar`
-     devolve ao estado local. Nada de acoplar a UI ao banco.
-     --------------------------------------------------------- */
   const cent = r => Math.round((Number(r) || 0) * 100);
   const reais = c => (Number(c) || 0) / 100;
 
@@ -47,8 +42,7 @@
         for (const [dia, ids] of Object.entries(S.rotina.adiados || {})) ids.forEach(b => o.push({ id: hashId(dia + b + "adiado"), bloco_id: b, dia, estado: "adiado" }));
         return o; },
       gravar: (S, rs) => { const f = {}, p = {}, a = {};
-        rs.forEach(r => { const alvo = r.estado === "feito" ? f : r.estado === "pulado" ? p : a;
-          (alvo[r.dia] = alvo[r.dia] || []).push(r.bloco_id); });
+        rs.forEach(r => { const alvo = r.estado === "feito" ? f : r.estado === "pulado" ? p : a; (alvo[r.dia] = alvo[r.dia] || []).push(r.bloco_id); });
         S.rotina.feitos = f; S.rotina.pulados = p; S.rotina.adiados = a; } },
 
     { t: "itens_refeicao", chave: "id",
@@ -104,9 +98,7 @@
 
     { t: "registros_medicamento", chave: "id",
       ler: S => { const o = [];
-        for (const [dia, marcas] of Object.entries(S.bem.tomadas || {})) marcas.forEach(m => {
-          const [med, hora] = String(m).split("|");
-          o.push({ id: hashId(dia + m), medicamento_id: med, dia, horario: hora, estado: "tomado" }); });
+        for (const [dia, marcas] of Object.entries(S.bem.tomadas || {})) marcas.forEach(m => { const [med, hora] = String(m).split("|"); o.push({ id: hashId(dia + m), medicamento_id: med, dia, horario: hora, estado: "tomado" }); });
         return o; },
       gravar: (S, rs) => { const m = {}; rs.forEach(r => (m[r.dia] = m[r.dia] || []).push(r.medicamento_id + "|" + r.horario)); S.bem.tomadas = m; } },
 
@@ -143,8 +135,7 @@
         oleosidade: (S.cabelo.perfil || {}).ole, quimica: (S.cabelo.perfil || {}).quim, objetivo: (S.cabelo.perfil || {}).obj,
         inicio_cronograma: S.cabelo.inicio || null }] : [],
       gravar: (S, rs) => { const r = rs[0]; if (!r) return;
-        S.cabelo.perfil = { curv: r.curvatura, esp: r.espessura, ole: r.oleosidade, quim: r.quimica, obj: r.objetivo };
-        S.cabelo.inicio = r.inicio_cronograma; } },
+        S.cabelo.perfil = { curv: r.curvatura, esp: r.espessura, ole: r.oleosidade, quim: r.quimica, obj: r.objetivo }; S.cabelo.inicio = r.inicio_cronograma; } },
 
     { t: "etapas_capilar", chave: "id",
       ler: S => S.cabelo.etapas.map(e => ({ id: hashId("cab" + e.id), etapa: e.id, frequencia_dias: e.freq })),
@@ -159,16 +150,11 @@
   function hashId(txt) {
     let h1 = 1779033703, h2 = 3144134277, h3 = 1013904242, h4 = 2773480762;
     for (let i = 0, k; i < txt.length; i++) {
-      k = txt.charCodeAt(i);
-      h1 = h2 ^ Math.imul(h1 ^ k, 597399067);
-      h2 = h3 ^ Math.imul(h2 ^ k, 2869860233);
-      h3 = h4 ^ Math.imul(h3 ^ k, 951274213);
-      h4 = h1 ^ Math.imul(h4 ^ k, 2716044179);
+      k = txt.charCodeAt(i); h1 = h2 ^ Math.imul(h1 ^ k, 597399067); h2 = h3 ^ Math.imul(h2 ^ k, 2869860233);
+      h3 = h4 ^ Math.imul(h3 ^ k, 951274213); h4 = h1 ^ Math.imul(h4 ^ k, 2716044179);
     }
-    h1 = Math.imul(h3 ^ (h1 >>> 18), 597399067);
-    h2 = Math.imul(h4 ^ (h2 >>> 22), 2869860233);
-    h3 = Math.imul(h1 ^ (h3 >>> 17), 951274213);
-    h4 = Math.imul(h2 ^ (h4 >>> 19), 2716044179);
+    h1 = Math.imul(h3 ^ (h1 >>> 18), 597399067); h2 = Math.imul(h4 ^ (h2 >>> 22), 2869860233);
+    h3 = Math.imul(h1 ^ (h3 >>> 17), 951274213); h4 = Math.imul(h2 ^ (h4 >>> 19), 2716044179);
     const p = n => ((n >>> 0).toString(16).padStart(8, "0"));
     return "d" + p(h1 ^ h2 ^ h3 ^ h4) + p(h2 ^ h1) + p(h3 ^ h1) + p(h4 ^ h1);
   }
@@ -182,54 +168,71 @@
       r.onsuccess = () => ok(r.result); r.onerror = () => err(r.error);
     });
   }
-  async function enfileirar(tabela, linha) {
-    try {
-      const db = await abrirDB();
-      await new Promise(ok => {
-        const tx = db.transaction(LOJA, "readwrite");
-        tx.objectStore(LOJA).put({ chave: tabela + ":" + (linha.id || "unico"), tabela, linha, em: Date.now() });
-        tx.oncomplete = ok;
-      });
-    } catch (e) { console.warn("fila:", e); }
-  }
   async function lerFila() {
-    try { const db = await abrirDB();
-      return await new Promise(ok => { const r = db.transaction(LOJA).objectStore(LOJA).getAll(); r.onsuccess = () => ok(r.result || []); });
-    } catch { return []; }
+    try { const db = await abrirDB(); return await new Promise(ok => { const r = db.transaction(LOJA).objectStore(LOJA).getAll(); r.onsuccess = () => ok(r.result || []); }); }
+    catch { return []; }
   }
   async function limparFila(chaves) {
-    try { const db = await abrirDB();
-      await new Promise(ok => { const tx = db.transaction(LOJA, "readwrite"); chaves.forEach(c => tx.objectStore(LOJA).delete(c)); tx.oncomplete = ok; });
-    } catch { }
+    try { const db = await abrirDB(); await new Promise(ok => { const tx = db.transaction(LOJA, "readwrite"); chaves.forEach(c => tx.objectStore(LOJA).delete(c)); tx.oncomplete = ok; }); }
+    catch { }
+  }
+  async function limparFilaToda() {
+    try { const db = await abrirDB(); await new Promise(ok => { const tx = db.transaction(LOJA, "readwrite"); tx.objectStore(LOJA).clear(); tx.oncomplete = ok; }); }
+    catch { }
+  }
+
+  function esconderTelas() {
+    ["onbConta", "onb", "app"].forEach(id => { const e = document.getElementById(id); if (e) e.classList.add("hide"); });
+  }
+  function criarBoot() {
+    if (!LIGADO || document.getElementById("museBoot")) return;
+    const app = document.getElementById("app");
+    appIniciado = !!(app && !app.classList.contains("hide") && typeof S !== "undefined" && S.perfil);
+    esconderTelas();
+    const d = document.createElement("div");
+    d.id = "museBoot";
+    d.style.cssText = "position:fixed;inset:0;z-index:9999;background:var(--bg,#F3F1EC);display:grid;place-items:center;padding:24px";
+    d.innerHTML = '<div style="text-align:center"><img src="logo.png" alt="muse." style="height:30px;width:auto;margin:0 auto 18px"><div style="font-family:var(--disp,system-ui);font-weight:700;color:var(--txt,#2B2430);font-size:18px">abrindo seu muse…</div><div style="color:var(--mut,#8A8292);font-size:13px;margin-top:7px">recuperando sua conta com segurança</div></div>';
+    document.body.appendChild(d);
+  }
+  function tirarBoot() { const d = document.getElementById("museBoot"); if (d) d.remove(); }
+  function mostrarApp() {
+    const conta = document.getElementById("onbConta"), onb = document.getElementById("onb"), app = document.getElementById("app");
+    if (conta) conta.classList.add("hide"); if (onb) onb.classList.add("hide"); if (app) app.classList.remove("hide");
+    tirarBoot();
+    if (!appIniciado && typeof iniciarApp === "function") { iniciarApp(); appIniciado = true; }
+  }
+  function mostrarEntrada() {
+    esconderTelas(); tirarBoot(); if (typeof abrirEntrada === "function") abrirEntrada();
+  }
+  function mostrarOnboarding() {
+    esconderTelas(); tirarBoot(); if (typeof abrirOnb === "function") abrirOnb();
   }
 
   async function cliente() {
     if (sb) return sb;
     const { createClient } = await import(CDN);
-    sb = createClient(C.SUPABASE_URL, C.SUPABASE_ANON_KEY, {
-      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
-    });
+    sb = createClient(C.SUPABASE_URL, C.SUPABASE_ANON_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
     return sb;
   }
 
   N.entrar = async function () {
+    criarBoot();
     const c = await cliente();
     const { error } = await c.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: location.href.split("#")[0], scopes: "openid email profile" }
+      options: { redirectTo: location.origin + location.pathname, scopes: "openid email profile" }
     });
-    if (error) toast("Não consegui abrir o login: " + error.message);
+    if (error) { tirarBoot(); mostrarEntrada(); toast("Não consegui abrir o login: " + error.message); }
   };
 
   N.sair = async function (apagarLocal) {
     const c = await cliente();
     await c.auth.signOut();
-    sessao = null; N.usuario = null; N.estado = "local";
-    try {
-      const db = await abrirDB();
-      await new Promise(ok => { const tx = db.transaction(LOJA, "readwrite"); tx.objectStore(LOJA).clear(); tx.oncomplete = ok; });
-    } catch { }
-    if (apagarLocal) { localStorage.removeItem(CHAVE); }
+    sessao = null; N.usuario = null; N.estado = "local"; N.pronta = false;
+    await limparFilaToda();
+    try { localStorage.removeItem(UID_KEY); } catch { }
+    if (apagarLocal) localStorage.removeItem(CHAVE);
     location.reload();
   };
 
@@ -238,6 +241,7 @@
     const { error } = await c.rpc("apagar_minha_conta");
     if (error) { toast("Não consegui apagar agora: " + error.message); return false; }
     localStorage.removeItem(CHAVE);
+    localStorage.removeItem(UID_KEY);
     Object.keys(localStorage).filter(k => k.startsWith(CHAVE + ".backup")).forEach(k => localStorage.removeItem(k));
     return true;
   };
@@ -276,8 +280,7 @@
       if (!silencioso) toast("Sincronizado.");
       return true;
     } catch (e) {
-      console.warn("sync:", e);
-      N.estado = "erro"; N.erro = e.message;
+      console.warn("sync:", e); N.estado = "erro"; N.erro = e.message;
       if (!silencioso) toast("Não consegui sincronizar agora: " + e.message);
       return false;
     } finally { sincronizando = false; pintarEstado(); }
@@ -286,16 +289,11 @@
   N.baixarDaNuvem = async function (silencioso) {
     if (!LIGADO || !sessao || !navigator.onLine) return false;
     try {
-      const c = await cliente();
-      await baixarTudo(c);
-      N.estado = "ok"; N.erro = null; pintarEstado();
-      if (!silencioso) toast("Dados restaurados da sua conta.");
-      return true;
+      const c = await cliente(); await baixarTudo(c); N.estado = "ok"; N.erro = null; pintarEstado();
+      if (!silencioso) toast("Dados restaurados da sua conta."); return true;
     } catch (e) {
-      console.warn("download da nuvem:", e);
-      N.estado = "erro"; N.erro = e.message; pintarEstado();
-      if (!silencioso) toast("Não consegui baixar seus dados: " + e.message);
-      return false;
+      console.warn("download da nuvem:", e); N.estado = "erro"; N.erro = e.message; pintarEstado();
+      if (!silencioso) toast("Não consegui baixar seus dados: " + e.message); return false;
     }
   };
 
@@ -305,14 +303,11 @@
     const remoto = {};
     for (const m of MAPA) { const { data } = await c.from(m.t).select("id", { count: "exact", head: false }); remoto[m.t] = (data || []).length; }
     const temRemoto = Object.values(remoto).some(n => n > 0);
-
     return new Promise(resolve => {
       const d = modal("Levar seus dados para a conta", `
-        <p class="mut" style="font-size:13.5px;margin-bottom:14px;line-height:1.55">
-          ${temRemoto ? "Esta conta já tem dados na nuvem. Registros com o mesmo identificador serão atualizados; o resto é somado. Nada é apagado."
-                      : "Nada foi enviado ainda. Isto é o que vai subir:"}</p>
+        <p class="mut" style="font-size:13.5px;margin-bottom:14px;line-height:1.55">${temRemoto ? "Esta conta já tem dados na nuvem. Registros com o mesmo identificador serão atualizados; o resto é somado. Nada é apagado." : "Nada foi enviado ainda. Isto é o que vai subir:"}</p>
         ${resumo.map(x => `<div class="nutri-linha"><span>${esc(x.t.replace(/_/g, " "))}</span><b>${x.n}</b>${remoto[x.t] ? `<span class="mut" style="font-size:12px">${remoto[x.t]} na nuvem</span>` : ""}</div>`).join("")}
-        <p class="mut" style="font-size:12px;margin-top:12px">Um backup do estado atual fica guardado neste aparelho antes do envio. Se der errado, dá para voltar.</p>
+        <p class="mut" style="font-size:12px;margin-top:12px">Um backup do estado atual fica guardado neste aparelho antes do envio.</p>
         <button class="btn full" id="mgS" style="margin-top:16px">Enviar para a conta</button>
         <button class="btn full sec sm" id="mgN" style="margin-top:10px">Agora não</button>`);
       $("#mgS", d).onclick = async () => {
@@ -347,95 +342,112 @@
   const salvarOriginal = window.salvar;
   window.salvar = function () {
     salvarOriginal.apply(this, arguments);
-    if (LIGADO && sessao) {
+    if (LIGADO && sessao && N.pronta) {
       clearTimeout(window.__syncTimer);
       window.__syncTimer = setTimeout(() => N.sincronizar(true), 2500);
     }
   };
 
-  /* O onboarding cria o primeiro perfil. Enviamos imediatamente para a conta,
-     além do debounce normal, para que fechar o PWA logo depois não perca o cadastro. */
   const finalizarOnbOriginal = window.finalizarOnb;
   if (typeof finalizarOnbOriginal === "function") {
     window.finalizarOnb = function () {
       const r = finalizarOnbOriginal.apply(this, arguments);
+      appIniciado = true;
       if (LIGADO && sessao) setTimeout(() => N.sincronizar(false), 100);
       return r;
     };
   }
 
-  let entradaResolvidaPara = null;
-  async function resolverEntradaAutenticada(c) {
-    if (!sessao) return false;
-    const uidAtual = sessao.user.id;
-    if (entradaResolvidaPara === uidAtual) return !!S.perfil;
+  function definirUsuario(s) {
+    sessao = s || null;
+    N.usuario = s ? { id: s.user.id, email: s.user.email, nome: s.user.user_metadata?.full_name } : null;
+  }
 
-    /* Se este contexto do PWA não tem perfil local, a conta remota é a fonte.
-       Isso cobre troca de aparelho e também Safari x app instalado no iPhone. */
+  async function resolverSessaoInicial(c, s) {
+    definirUsuario(s);
+    if (!s) {
+      N.estado = "local"; N.pronta = true; pintarEstado();
+      if (S.perfil) mostrarApp(); else mostrarEntrada();
+      return;
+    }
+
+    const uid = s.user.id;
+    const uidAnterior = localStorage.getItem(UID_KEY);
+    if (uidAnterior && uidAnterior !== uid) {
+      localStorage.removeItem(CHAVE);
+      localStorage.setItem(UID_KEY, uid);
+      await limparFilaToda();
+      location.reload();
+      return;
+    }
+    localStorage.setItem(UID_KEY, uid);
+    N.estado = "sincronizando"; pintarEstado();
+
     if (!S.perfil && navigator.onLine) {
-      try {
-        await baixarTudo(c);
-      } catch (e) {
-        console.warn("restauração da conta:", e);
-        N.estado = "erro"; N.erro = e.message; pintarEstado();
-        return false;
-      }
+      try { await baixarTudo(c); }
+      catch (e) { N.estado = "erro"; N.erro = e.message; console.warn("restauração da conta:", e); }
     }
 
-    entradaResolvidaPara = uidAtual;
-    const conta = document.getElementById("onbConta");
-    const onb = document.getElementById("onb");
-    const app = document.getElementById("app");
-
+    N.pronta = true;
     if (S.perfil) {
-      const appJaVisivel = app && !app.classList.contains("hide");
-      if (conta) conta.classList.add("hide");
-      if (onb) onb.classList.add("hide");
-      if (app) app.classList.remove("hide");
-      if (!appJaVisivel && typeof iniciarApp === "function") iniciarApp();
-      return true;
+      mostrarApp();
+      N.estado = "ok"; pintarEstado();
+      N.sincronizar(true);
+    } else {
+      N.estado = navigator.onLine ? "ok" : "erro"; pintarEstado();
+      mostrarOnboarding();
+    }
+  }
+
+  async function tratarEventoAuth(c, evt, s) {
+    if (evt === "INITIAL_SESSION" || evt === "TOKEN_REFRESHED" || evt === "USER_UPDATED") return;
+    const uidAntes = sessao && sessao.user ? sessao.user.id : null;
+    const uidNovo = s && s.user ? s.user.id : null;
+
+    if (evt === "SIGNED_OUT" || !s) {
+      definirUsuario(null); N.estado = "local"; pintarEstado();
+      return;
     }
 
-    if (conta) conta.classList.add("hide");
-    if (typeof abrirOnb === "function") abrirOnb();
-    return false;
+    if (uidAntes && uidNovo && uidAntes !== uidNovo) {
+      localStorage.removeItem(CHAVE); localStorage.setItem(UID_KEY, uidNovo); await limparFilaToda(); location.reload(); return;
+    }
+
+    definirUsuario(s); localStorage.setItem(UID_KEY, uidNovo);
+    if (!N.pronta) return;
+    if (!S.perfil && navigator.onLine) {
+      try { await baixarTudo(c); } catch (e) { N.estado = "erro"; N.erro = e.message; pintarEstado(); return; }
+    }
+    if (S.perfil) mostrarApp(); else mostrarOnboarding();
+    N.estado = "ok"; pintarEstado();
   }
 
   N.iniciar = async function () {
-    pintarEstado();
-    if (!LIGADO) return;
-    try {
-      const c = await cliente();
-      const { data } = await c.auth.getSession();
-      sessao = data.session || null;
+    if (bootstrapPromise) return bootstrapPromise;
+    bootstrapPromise = (async () => {
+      criarBoot(); pintarEstado();
+      if (!LIGADO) { N.pronta = true; tirarBoot(); return; }
+      try {
+        const c = await cliente();
+        const { data, error } = await c.auth.getSession();
+        if (error) throw error;
+        await resolverSessaoInicial(c, data.session || null);
 
-      c.auth.onAuthStateChange(async (evt, s) => {
-        const trocou = sessao && s && sessao.user.id !== s.user.id;
-        sessao = s;
-        N.usuario = s ? { id: s.user.id, email: s.user.email, nome: s.user.user_metadata?.full_name } : null;
-        if (trocou) { location.reload(); return; }
-
-        if (s) {
-          N.estado = "ok"; pintarEstado();
-          const temPerfil = await resolverEntradaAutenticada(c);
-          if (temPerfil) await N.sincronizar(true);
-        } else {
-          entradaResolvidaPara = null;
-          N.estado = "local"; pintarEstado();
+        if (!authSub) {
+          const { data: sub } = c.auth.onAuthStateChange((evt, s) => { queueMicrotask(() => tratarEventoAuth(c, evt, s)); });
+          authSub = sub && sub.subscription;
         }
-      });
-
-      if (sessao) {
-        N.usuario = { id: sessao.user.id, email: sessao.user.email, nome: sessao.user.user_metadata?.full_name };
-        N.estado = "ok"; pintarEstado();
-        const temPerfil = await resolverEntradaAutenticada(c);
-        if (temPerfil) await N.sincronizar(true);
-        setInterval(() => N.sincronizar(true), C.SYNC_INTERVALO || 60000);
+        if (sessao && !syncTimer) syncTimer = setInterval(() => N.sincronizar(true), C.SYNC_INTERVALO || 60000);
+      } catch (e) {
+        console.warn("nuvem:", e); N.estado = "erro"; N.erro = e.message; N.pronta = true; pintarEstado();
+        tirarBoot();
+        if (S.perfil) mostrarApp(); else mostrarEntrada();
+        toast("Não consegui confirmar sua conta agora. Você pode tentar novamente.");
       }
-    } catch (e) {
-      console.warn("nuvem:", e);
-      N.estado = "erro"; N.erro = e.message; pintarEstado();
-    }
+    })();
+    return bootstrapPromise;
   };
-  if (document.readyState !== "loading") N.iniciar(); else addEventListener("DOMContentLoaded", N.iniciar);
+
+  if (LIGADO) criarBoot();
+  if (document.readyState !== "loading") N.iniciar(); else addEventListener("DOMContentLoaded", N.iniciar, { once: true });
 })();
