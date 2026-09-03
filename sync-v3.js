@@ -1,17 +1,9 @@
 /* muse. — sincronização v3 entre aparelhos.
-   Usa a própria config_usuario, que já faz parte da nuvem do muse., como
-   envelope do estado canônico. Assim não depende de uma tabela auxiliar que
-   pode não existir no projeto Supabase já instalado.
+   Estado canônico por conta usando config_usuario, que já existe no projeto.
 
-   Regras:
-   - a nuvem vence ao abrir outro aparelho;
-   - toda alteração local sobe como snapshot completo;
-   - exclusões também sincronizam;
-   - se houver um snapshot v2 válido, ele é migrado;
-   - na primeira ativação, tenta restaurar a nuvem antiga antes de eleger o
-     estado canônico;
-   - se esta camada falhar, a sincronização antiga é restaurada em vez de ficar
-     parcialmente sobrescrita.
+   Esta versão NÃO migra automaticamente o snapshot v2. A v2 podia ficar
+   desatualizada e acabar ressuscitando um estado antigo. Na primeira ativação
+   da v3, o estado que o app realmente tem naquele momento vira a referência.
 */
 "use strict";
 (function () {
@@ -22,7 +14,6 @@
   const REV_KEY = BASE_KEY + ".cloud-v3-rev";
   const BACKUP_KEY = BASE_KEY + ".antes-do-sync-v3";
   const HIDDEN = "__muse_sync_v3";
-  const V2_GTIN = "__muse_state_v2__";
 
   let originalSync = null;
   let originalDownload = null;
@@ -37,6 +28,24 @@
 
   const sleep = ms => new Promise(r => setTimeout(r, ms));
   const clone = value => JSON.parse(JSON.stringify(value));
+
+  /* Mescla segura para snapshots. O app-base possui campos cujo valor padrão é
+     null (perfil, cabelo.perfil etc.). Em JavaScript typeof null === "object",
+     portanto chamar Object.keys(null) quebra. Esta implementação trata null
+     antes de percorrer objetos. */
+  function mergeSnapshot(base, novo) {
+    if (novo === null || novo === undefined) return base;
+    if (base === null || base === undefined) return clone(novo);
+    if (Array.isArray(base) || typeof base !== "object") return clone(novo);
+    if (typeof novo !== "object" || Array.isArray(novo)) return clone(novo);
+    const r = {};
+    for (const k of new Set([...Object.keys(base), ...Object.keys(novo)])) {
+      r[k] = k in base && k in novo
+        ? mergeSnapshot(base[k], novo[k])
+        : clone(k in novo ? novo[k] : base[k]);
+    }
+    return r;
+  }
 
   function hiddenMeta(payload) {
     return payload ? { version: 3, rev: payload.rev, saved_at: payload.saved_at } : null;
@@ -107,7 +116,9 @@
     let body = null;
     try { body = text ? JSON.parse(text) : null; } catch { body = text; }
     if (!r.ok) {
-      const msg = body && (body.message || body.hint || body.code) ? (body.message || body.hint || body.code) : ("HTTP " + r.status);
+      const msg = body && (body.message || body.hint || body.code)
+        ? (body.message || body.hint || body.code)
+        : ("HTTP " + r.status);
       const err = new Error(msg);
       err.status = r.status;
       err.body = body;
@@ -125,20 +136,6 @@
     if (!sessionUser) return null;
     const row = await restGet("config_usuario", "modulos,atualizado_em", { user_id: sessionUser.id });
     return row && row.modulos ? row.modulos[HIDDEN] || null : null;
-  }
-
-  async function tryReadV2() {
-    if (!sessionUser) return null;
-    try {
-      const row = await restGet("cache_codigo_barras", "produto", { user_id: sessionUser.id, gtin: V2_GTIN });
-      const p = row && row.produto;
-      return p && p.version === 2 && p.snapshot ? p : null;
-    } catch (e) {
-      /* A v2 justamente podia falhar porque esta tabela não existia no banco
-         em produção. Isso não deve impedir a v3 de seguir pela nuvem antiga. */
-      console.warn("cloud-v3 migration v2 skipped:", e);
-      return null;
-    }
   }
 
   function stripHiddenLocal() {
@@ -172,15 +169,13 @@
   }
 
   async function applyPayload(payload, force) {
-    if (!payload || !payload.snapshot) return false;
-    const version = Number(payload.version || 0);
-    if (version !== 2 && version !== 3) return false;
+    if (!payload || payload.version !== 3 || !payload.snapshot) return false;
     if (!force && payload.rev && payload.rev === lastRev) return false;
     if (!force && !safeToApplyNow()) return false;
 
     applyingRemote = true;
     try {
-      if (typeof mesclar === "function" && typeof VAZIO !== "undefined") S = mesclar(clone(VAZIO), clone(payload.snapshot));
+      if (typeof VAZIO !== "undefined") S = mergeSnapshot(clone(VAZIO), clone(payload.snapshot));
       else S = clone(payload.snapshot);
       stripHiddenLocal();
       localStorage.setItem(BASE_KEY, JSON.stringify(S));
@@ -203,7 +198,8 @@
 
     const hadMod = S.modulos && Object.prototype.hasOwnProperty.call(S.modulos, HIDDEN);
     const oldMod = hadMod ? S.modulos[HIDDEN] : undefined;
-    const lemb = S.cfg && S.cfg.lembretes ? S.cfg.lembretes : (S.cfg.lembretes = {});
+    S.cfg = S.cfg || {};
+    const lemb = S.cfg.lembretes || (S.cfg.lembretes = {});
     const hadLem = Object.prototype.hasOwnProperty.call(lemb, HIDDEN);
     const oldLem = hadLem ? lemb[HIDDEN] : undefined;
 
@@ -241,7 +237,7 @@
       if (!meta || !meta.rev) return false;
       if (!force && meta.rev === lastRev) return false;
       const payload = await readPayload();
-      if (!payload) return false;
+      if (!payload || payload.version !== 3) return false;
       const applied = await applyPayload(payload, !!force);
       if (applied && !silent && typeof toast === "function") toast("Atualizado com as mudanças do outro aparelho.");
       return applied;
@@ -256,25 +252,18 @@
     const meta = metaRow && metaRow.lembretes ? metaRow.lembretes[HIDDEN] : null;
     if (meta && meta.rev) {
       const payload = await readPayload();
-      if (payload && payload.snapshot) {
+      if (payload && payload.version === 3 && payload.snapshot) {
         await applyPayload(payload, true);
         return "restored-v3";
       }
     }
 
-    const oldV2 = await tryReadV2();
-    if (oldV2) {
-      await applyPayload(oldV2, true);
-      dirty = true;
-      await pushPayload(true);
-      return "migrated-v2";
-    }
-
-    /* Primeira ativação real da v3: guarda uma cópia local e tenta restaurar
-       o estado já existente no Supabase antes de escolher o canônico. Isso
-       evita que um celular desatualizado apague mudanças feitas no computador. */
+    /* Não usamos mais o snapshot v2 aqui. Se o app já possui um perfil neste
+       momento, preservamos exatamente este estado. Se estiver vazio, a camada
+       antiga pode restaurar uma única vez antes da v3 ser criada. */
     try { if (S && S.perfil) localStorage.setItem(BACKUP_KEY, JSON.stringify(S)); } catch { }
-    if (originalDownload && navigator.onLine) {
+
+    if ((!S || !S.perfil) && originalDownload && navigator.onLine) {
       try { await originalDownload(true); }
       catch (e) { console.warn("cloud-v3 legacy restore:", e); }
     }
@@ -282,8 +271,8 @@
 
     if (!S || !S.perfil) return "empty";
     dirty = true;
-    await pushPayload(true);
-    return "seeded";
+    const seeded = await pushPayload(true);
+    return seeded ? "seeded" : "seed-failed";
   }
 
   function installSaveHook() {
@@ -331,8 +320,8 @@
     originalDownload = typeof N.baixarDaNuvem === "function" ? N.baixarDaNuvem.bind(N) : null;
     if (!originalSync || !originalDownload) return;
 
-    /* Pausa só o envio inicial da camada antiga. A própria Nuvem continua
-       autenticando normalmente e libera N.pronta; depois a v3 assume. */
+    /* Impede o envio automático da sincronização antiga enquanto a conta está
+       terminando de iniciar. A autenticação continua normalmente. */
     N.sincronizar = async function () { return false; };
 
     try {
@@ -344,12 +333,17 @@
         return;
       }
 
-      await seedOrRestore();
+      const result = await seedOrRestore();
+      if (result === "seed-failed") throw new Error("não consegui criar o primeiro estado sincronizado");
+
       initialized = true;
       installCloudOverrides(N);
       installSaveHook();
       stripHiddenLocal();
       localStorage.setItem(BASE_KEY, JSON.stringify(S));
+      N.estado = "ok";
+      N.erro = null;
+      if (typeof renderConta === "function") renderConta();
 
       if (!pollTimer) pollTimer = setInterval(() => {
         if (!document.hidden && !dirty) pullIfChanged(false, true);
@@ -366,7 +360,7 @@
       N.syncV3 = false;
       N.estado = "erro";
       N.erro = e.message;
-      const detalhe = String(e.message || "erro desconhecido").slice(0, 120);
+      const detalhe = String(e.message || "erro desconhecido").slice(0, 140);
       if (typeof toast === "function") toast("Sincronização entre aparelhos: " + detalhe);
       if (typeof renderConta === "function") renderConta();
     }
