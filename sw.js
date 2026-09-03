@@ -1,11 +1,11 @@
 /* muse. — service worker.
-   Shell em cache para abrir offline. Documentos e arquivos de autenticação
-   tentam a rede primeiro para que correções de login não fiquem presas em cache.
+   Shell em cache para abrir offline. Documentos e arquivos de autenticação/
+   sincronização tentam a rede primeiro para não prender correções antigas.
    Respostas de APIs de terceiros nunca entram no cache. */
-const CACHE = "muse-v9";
+const CACHE = "muse-v10";
 const SHELL = [
   "./", "./index.html", "./app.html", "./privacidade.html",
-  "./config.js", "./nuvem.js", "./manifest.json",
+  "./config.js", "./nuvem.js", "./sync-v2.js", "./manifest.json",
   "./logo.png", "./icon-192.png", "./icon-512.png",
   "./icon-maskable-512.png", "./apple-touch-icon.png", "./og.png"
 ];
@@ -35,12 +35,10 @@ self.addEventListener("fetch", e => {
   if (req.method !== "GET") return;
   const url = new URL(req.url);
 
-  /* Supabase, Open Food Facts e qualquer terceiro ficam fora do cache. */
   if (url.origin !== location.origin) return;
 
-  /* Navegação e os dois scripts que controlam conta/login usam network-first. */
-  const authScript = /\/(config|nuvem)\.js$/.test(url.pathname);
-  if (req.mode === "navigate" || req.destination === "document" || authScript) {
+  const criticalScript = /\/(config|nuvem|sync-v2)\.js$/.test(url.pathname);
+  if (req.mode === "navigate" || req.destination === "document" || criticalScript) {
     e.respondWith(
       fetch(req)
         .then(r => {
@@ -67,7 +65,7 @@ self.addEventListener("fetch", e => {
 self.addEventListener("notificationclick", e => {
   e.notification.close();
   e.waitUntil(clients.matchAll({ type: "window", includeUncontrolled: true }).then(ls => {
-    for (const c of ls) if (c.url.includes("app.html") && "focus" in c) return c.focus();
+    for (const c of ls) if ((c.url.includes("/app") || c.url.includes("app.html")) && "focus" in c) return c.focus();
     return clients.openWindow("./app.html");
   }));
 });
