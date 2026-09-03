@@ -48,7 +48,6 @@
 
   function cleanSnapshot() {
     const snap = clone(S);
-    // Reserva para metadados futuros sem deixar a sincronização se auto-embutir.
     if (snap.modulos && snap.modulos.__muse_sync) delete snap.modulos.__muse_sync;
     return snap;
   }
@@ -83,17 +82,6 @@
     if (updated) {
       lastServerUpdated = updated;
       localStorage.setItem(UPDATED_KEY, updated);
-    }
-  }
-
-  function persistLocalWithoutDirty() {
-    applyingRemote = true;
-    try {
-      // chama a implementação local original através do wrapper atual;
-      // o flag impede esta camada de marcar o download como alteração do usuário.
-      window.salvar();
-    } finally {
-      applyingRemote = false;
     }
   }
 
@@ -139,7 +127,6 @@
       } else {
         S = clone(payload.snapshot);
       }
-      // grava direto no localStorage para não disparar um upload de volta.
       localStorage.setItem(BASE_KEY, JSON.stringify(S));
       persistMeta(payload, updated);
       dirty = false;
@@ -218,9 +205,10 @@
       return "restored";
     }
 
-    // Migração transparente: antes de criar o snapshot oficial, aproveita os
-    // dados já existentes nas tabelas antigas do Supabase quando possível.
-    if (originalCloudDownload && navigator.onLine) {
+    /* Primeira migração: se este aparelho JÁ tem dados, preserva exatamente
+       esse estado como candidato canônico. Só busca a nuvem antiga quando o
+       aparelho está vazio. Assim uma cópia velha não apaga mudanças recentes. */
+    if ((!S || !S.perfil) && originalCloudDownload && navigator.onLine) {
       applyingRemote = true;
       try { await originalCloudDownload(true); }
       catch (e) { console.warn("migração cloud-v1:", e); }
@@ -229,8 +217,6 @@
 
     if (!S || !S.perfil) return "empty";
 
-    // Primeiro aparelho que chegar cria o estado canônico. Insert, não upsert,
-    // evita dois aparelhos antigos se atropelarem durante a migração inicial.
     const c = await getClient();
     const payload = makePayload();
     const { data, error } = await c.from("cache_codigo_barras").insert({
@@ -239,7 +225,6 @@
     }).select("atualizado_em").single();
 
     if (error) {
-      // Se outro aparelho criou milissegundos antes, ele venceu. Baixa o dele.
       if (String(error.code) === "23505") {
         const winner = await readRow(false);
         if (winner && winner.produto) await applyPayload(winner.produto, winner.atualizado_em, { force: true });
@@ -299,14 +284,13 @@
       overrideOldCloud();
       installSaveHook();
       const c = await waitForBaseAuth();
-      overrideOldCloud(); // garante override depois de qualquer bootstrap tardio
+      overrideOldCloud();
       installSaveHook();
 
       if (!session) return;
       const result = await seedOrRestore();
       initialized = true;
 
-      // Depois da migração/restauração, o estado local passa a representar a nuvem.
       if (result === "restored" || result === "seeded") refreshVisibleUI();
 
       c.auth.onAuthStateChange((_evt, s) => {
@@ -322,13 +306,11 @@
       });
     } catch (e) {
       console.warn("cloud-v2 start:", e);
-      initialized = true; // não bloqueia o uso local se a nuvem falhar
+      initialized = true;
       if (typeof toast === "function") toast("A sincronização entre aparelhos está temporariamente indisponível. Seus dados seguem salvos aqui.");
     }
   }
 
-  // O arquivo é carregado depois de nuvem.js. Executar após o DOM garante que
-  // o bootstrap de autenticação base já começou, mas sem exigir nova configuração.
   if (document.readyState === "loading") addEventListener("DOMContentLoaded", start, { once: true });
   else start();
 })();
