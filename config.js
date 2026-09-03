@@ -11,13 +11,13 @@ window.MUSE_CONFIG = {
   SYNC_INTERVALO: 60000
 };
 
-/* Camada v2 de sincronização entre aparelhos.
-   Carrega cedo, mas só inicia depois que o DOM e o fluxo base de autenticação
-   estiverem prontos. Assim não exige alterar o app.html nem refazer o login. */
-(function carregarSyncV2() {
-  if (document.querySelector('script[data-muse-sync-v2]')) return;
+/* Camada v3 de sincronização entre aparelhos.
+   Carrega cedo, espera a autenticação base terminar e usa a infraestrutura de
+   nuvem que já existe no projeto antes de assumir a sincronização. */
+(function carregarSyncV3() {
+  if (document.querySelector('script[data-muse-sync-v3]')) return;
   const s = document.createElement("script");
-  s.src = "sync-v2.js";
-  s.dataset.museSyncV2 = "1";
+  s.src = "sync-v3.js";
+  s.dataset.museSyncV3 = "1";
   document.head.appendChild(s);
 })();
