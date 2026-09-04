@@ -69,11 +69,12 @@ window.MUSE_CONFIG = {
   SYNC_INTERVALO: 60000
 };
 
-/* Camada v3 de sincronização entre aparelhos. */
-(function carregarSyncV3() {
-  if (document.querySelector('script[data-muse-sync-v3]')) return;
+/* Camada v4: snapshot canônico direto no Supabase, sem depender da sincronização
+   legada de várias tabelas para propagar mudanças entre aparelhos. */
+(function carregarSyncV4() {
+  if (document.querySelector('script[data-muse-sync-v4]')) return;
   const s = document.createElement("script");
-  s.src = "sync-v3.js?v=20260903-2";
-  s.dataset.museSyncV3 = "1";
+  s.src = "sync-v4.js?v=20260904-1";
+  s.dataset.museSyncV4 = "1";
   document.head.appendChild(s);
 })();
