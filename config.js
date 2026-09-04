@@ -69,12 +69,19 @@ window.MUSE_CONFIG = {
   SYNC_INTERVALO: 60000
 };
 
-/* Camada v4: snapshot canônico direto no Supabase, sem depender da sincronização
-   legada de várias tabelas para propagar mudanças entre aparelhos. */
-(function carregarSyncV4() {
-  if (document.querySelector('script[data-muse-sync-v4]')) return;
+/* A sincronização precisa registrar seu boot antes de nuvem.js. Enquanto este
+   config.js está sendo executado pelo parser, document.write insere o script de
+   forma bloqueante e elimina a corrida que existia nas versões v3/v4. */
+(function carregarSyncV5Deterministico() {
+  const src = "sync-v5.js?v=20260904-2";
+  if (document.readyState === "loading") {
+    document.write('<script src="' + src + '" data-muse-sync-v5="1"><\\/script>');
+    return;
+  }
+  if (document.querySelector('script[data-muse-sync-v5]')) return;
   const s = document.createElement("script");
-  s.src = "sync-v4.js?v=20260904-1";
-  s.dataset.museSyncV4 = "1";
+  s.src = src;
+  s.async = false;
+  s.dataset.museSyncV5 = "1";
   document.head.appendChild(s);
 })();
