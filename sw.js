@@ -2,10 +2,10 @@
    Shell em cache para abrir offline. Documentos e arquivos de autenticação/
    sincronização tentam a rede primeiro para não prender correções antigas.
    Respostas de APIs de terceiros nunca entram no cache. */
-const CACHE = "muse-v11";
+const CACHE = "muse-v12";
 const SHELL = [
   "./", "./index.html", "./app.html", "./privacidade.html",
-  "./config.js", "./nuvem.js", "./sync-v4.js", "./manifest.json",
+  "./config.js", "./nuvem.js", "./sync-v5.js", "./manifest.json",
   "./logo.png", "./icon-192.png", "./icon-512.png",
   "./icon-maskable-512.png", "./apple-touch-icon.png", "./og.png"
 ];
@@ -37,7 +37,7 @@ self.addEventListener("fetch", e => {
 
   if (url.origin !== location.origin) return;
 
-  const criticalScript = /\/(config|nuvem|sync-v4)\.js$/.test(url.pathname);
+  const criticalScript = /\/(config|nuvem|sync-v5)\.js$/.test(url.pathname);
   if (req.mode === "navigate" || req.destination === "document" || criticalScript) {
     e.respondWith(
       fetch(req)
