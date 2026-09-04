@@ -73,9 +73,9 @@ window.MUSE_CONFIG = {
    config.js está sendo executado pelo parser, document.write insere o script de
    forma bloqueante e elimina a corrida que existia nas versões v3/v4. */
 (function carregarSyncV5Deterministico() {
-  const src = "sync-v5.js?v=20260904-2";
+  const src = "sync-v5.js?v=20260904-3";
   if (document.readyState === "loading") {
-    document.write('<script src="' + src + '" data-muse-sync-v5="1"><\\/script>');
+    document.write('<script src="' + src + '" data-muse-sync-v5="1"></script>');
     return;
   }
   if (document.querySelector('script[data-muse-sync-v5]')) return;
